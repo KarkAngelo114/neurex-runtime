@@ -1,0 +1,12 @@
+{
+  "name": "neurex-runtime",
+  "version": "1.0.0",
+  "description": "Run neurex models on Javascript!",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["neurex", "model", "nrx", "neural-network", "neural", "deep learning", "runtime"],
+  "author": "Kark Angelo V. Pada",
+  "license": "MIT"
+}
