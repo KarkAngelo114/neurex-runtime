@@ -1,12 +1,20 @@
 {
   "name": "neurex-runtime",
   "version": "1.0.0",
-  "description": "Run neurex models on Javascript!",
+  "description": "A NodeJS library that allows you to run neurex models for your NodeJS applications",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": ["neurex", "model", "nrx", "neural-network", "neural", "deep learning", "runtime"],
   "author": "Kark Angelo V. Pada",
-  "license": "MIT"
+  "license": "MIT",
+  "homepage": "https://github.com/KarkAngelo114/neurex-runtime#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KarkAngelo114/neurex-runtime.git"
+  },
+  "bugs": {
+    "url": "https://github.com/KarkAngelo114/neurex-runtime/issues"
+  }
 }
