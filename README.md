@@ -3,7 +3,7 @@
 A browser port of the main library [Neurex](https://github.com/KarkAngelo114/Neurex) to run models on your browsers for browser inferencing! Bring intelligence right on your client's browsers now!
 
 ## Installation
-CDN:
+via CDN:
 ```html
 <script src="https://cdn.jsdelivr.net/gh/KarkAngelo114/neurex-runtime@cdfd8ae/dist/neurex-runtime.umd.js" defer></script> 
 ```
@@ -58,3 +58,50 @@ If you're working on vanilla projects, simply you can use the CDN in the script 
 
 The library does not directly load an `.nrx` model because the `loadSavedModel()` accepts parsed JSON only. To use your trained model, you have to convert your `.nrx` model to JSON format by going to https://neurex-documentation.vercel.app/convert-to-json.
 To get the contents of your model JSON file, you can use `fetch()` (or whatever you use for fetching) just like in the example above. After parsing, you can pass the parsed JSON data to the `loadSavedModel()` to reconstruct the model.
+
+
+If you're working on JS frameworks (like ReactJS), you can directly import the `Runtime` class:
+
+```Javascript
+import {useEffect, useState, useRef} from 'react';
+import { Runtime } from 'neurex-runtime';
+
+function App() {
+    const [isModelLoaded, setIsModelLoaded] = useState(false);
+
+    let nrx = useRef(null); // we use useRef() to reference the class when the component is rendered
+
+    useEffect(() => {
+        const init = async () => {
+            nrx.current = new Runtime(); // set reference of the initialize class
+            const res = await fetch("/model.json"); // ensure that your model is inside the "public" folder
+            const modelData = await res.json(); // parse the JSON response;
+
+            // pass the parsed JSON data to loadSavedModel() to reconstruct the network
+            await nrx.current.loadSavedModel(modelData); 
+        }
+
+        init();
+    },[]);
+
+    const handlePrediction = async () => {
+        // do something... (e.g. preprocessing of your data like image pixels, preparing the data to be feed to the network, and the likes)
+
+        const input = [0.0834, 0.4968, 0.4535]; // this can be an array of preprocessed image pixels flattened to 1D array, an input from another function (like sensor readings response) or from another external source to be used as inputs
+        const pred = await nrx.current.predict([input]); // run the inference
+
+        /*
+        * Note: The outputs are float32array. You can convert it by using Array.from() if you have to.
+        */
+    }
+
+    return (
+        <>
+            {/* ...rest of the JSX code...*/}
+        </>
+    );
+}
+
+export default App;
+
+```
