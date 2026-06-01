@@ -10,7 +10,7 @@ module.exports = [
             name: 'NeurexRuntime',
             exports: 'named'
         },
-        plugins: [resolve(), commonjs()]
+        plugins: [resolve(), commonjs({ defaultIsModuleExports: true })]
     },
     {
         input: 'index.js',
@@ -19,6 +19,6 @@ module.exports = [
             format: 'esm',
             exports: 'named'
         },
-        plugins: [resolve(), commonjs()]
+        plugins: [resolve(), commonjs({ defaultIsModuleExports: true })]
     }
 ];
