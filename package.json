@@ -15,6 +15,7 @@
       "dist/",
       "index.js",
       "index.mjs",
+      "index.d.ts",
       "core/",
       "layers/",
       "params_init/",
@@ -22,7 +23,6 @@
   ],
   "scripts": {
     "build":"rollup -c"
-
   },
   "keywords": [
     "neurex",
