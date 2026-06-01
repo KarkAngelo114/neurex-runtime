@@ -39,9 +39,6 @@
   "bugs": {
     "url": "https://github.com/KarkAngelo114/neurex-runtime/issues"
   },
-  "dependencies": {
-    "fflate": "^0.8.3"
-  },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^29.0.3",
     "@rollup/plugin-node-resolve": "^16.0.3",

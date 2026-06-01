@@ -1,4 +1,4 @@
-const fflate = require('fflate');
+
 const Layers = require('../layers');
 const { setGlobalParams } = require('../params_init/globals');
 
@@ -49,34 +49,17 @@ class Runtime {
      * 
      * @param {String} model - path to your model
      */
-    loadModel(buffer) {
+    loadSavedModel(json) {
         try {
-            if (!buffer) {
-                throw new Error('[ERROR]------- No buffer provided');
+            if (!json) {
+                throw new Error('[ERROR]------- No JSON provided');
             }
 
             if (this.layers.length > 0) {
                 throw new Error('[ERROR]------- A model is already loaded in this instance');
             }
 
-            const rawBuffer = new Uint8Array(buffer);
-
-            // Validate magic header
-            const header = String.fromCharCode(rawBuffer[0], rawBuffer[1], rawBuffer[2], rawBuffer[3]);
-            if (header !== 'NRX3') {
-                throw new Error('Invalid file format. Expected a .nrx model file.');
-            }
-
-            // Check version
-            const version = rawBuffer[4];
-            if (version !== 0x03) {
-                throw new Error(`Unsupported NRX version: ${version}`);
-            }
-
-            // Decompress and parse
-            const compressedData = rawBuffer.slice(5);
-            const jsonString = new TextDecoder().decode(fflate.unzlibSync(compressedData)); 
-            const modelData = JSON.parse(jsonString);
+            const modelData = JSON.parse(json);
 
             // Assign properties
             this.task = modelData.task;
