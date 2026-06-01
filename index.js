@@ -1,3 +1,5 @@
 const Runtime = require('./core');
 
-exports.Runtime = Runtime;
+module.exports = {
+    Runtime: Runtime
+};

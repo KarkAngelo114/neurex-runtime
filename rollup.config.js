@@ -4,7 +4,7 @@ const { terser } = require('rollup-plugin-terser');
 
 module.exports = [
     {
-        input: 'index.js',
+        input: 'index.js', 
         output: {
             file: 'dist/neurex-runtime.umd.js',
             format: 'umd',
@@ -13,7 +13,6 @@ module.exports = [
         },
         plugins: [resolve(), commonjs(), terser()]
     },
-
     {
         input: 'index.js',
         output: {
