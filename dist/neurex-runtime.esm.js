@@ -3689,7 +3689,7 @@ function requireRuntime () {
 
 	            // Decompress and parse
 	            const compressedData = rawBuffer.slice(5);
-	            const jsonString = new TextDecoder().decode(fflate.inflateSync(compressedData));
+	            const jsonString = new TextDecoder().decode(fflate.unzlibSync(compressedData)); 
 	            const modelData = JSON.parse(jsonString);
 
 	            // Assign properties
