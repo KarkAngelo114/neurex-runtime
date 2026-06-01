@@ -11,7 +11,7 @@ module.exports = [
             name: 'NeurexRuntime',
             exports: 'named'
         },
-        plugins: [resolve(), commonjs(), terser()]
+        plugins: [resolve(), commonjs()]
     },
     {
         input: 'index.js',
