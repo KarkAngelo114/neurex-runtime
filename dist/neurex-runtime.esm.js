@@ -471,7 +471,43 @@ function requireEntry () {
 	 */
 	const MaxPool = (input, poolSize, inputShape, outputShape, strides, outputTemplatePointer) => functions.MaxPooling(input, poolSize, inputShape, outputShape, strides, outputTemplatePointer);
 
-
+	const derivatives = {
+	    relu: (input) => {
+	        const output = new Float32Array(input.length);
+	        for (let i = 0; i < input.length; i++) {
+	            output[i] = input[i] > 0 ? 1 : 0;
+	        }
+	        return output;
+	    },
+	    sigmoid: (input) => {
+	        const sig = functions.Sigmoid(input);
+	        const output = new Float32Array(input.length);
+	        for (let i = 0; i < input.length; i++) {
+	            output[i] = sig[i] * (1 - sig[i]);
+	        }
+	        return output;
+	    },
+	    tanh: (input) => {
+	        const output = new Float32Array(input.length);
+	        for (let i = 0; i < input.length; i++) {
+	            const t = Math.tanh(input[i]);
+	            output[i] = 1 - t * t;
+	        }
+	        return output;
+	    },
+	    softmax: (input) => {
+	        // Jacobian diagonal approximation (used in some loss+activation combos)
+	        const s = functions.Softmax(input);
+	        const output = new Float32Array(input.length);
+	        for (let i = 0; i < input.length; i++) {
+	            output[i] = s[i] * (1 - s[i]);
+	        }
+	        return output;
+	    },
+	    linear: (input) => {
+	        return new Float32Array(input.length).fill(1);
+	    }
+	};
 
 	entry = {
 	    getEmbeddings,
@@ -487,6 +523,7 @@ function requireEntry () {
 	    element_wise_sub,
 	    MaxPool,
 	    scaleDiff,
+	    derivatives
 	};
 	return entry;
 }
@@ -726,7 +763,7 @@ function requireLayers () {
 
 	            let function_name = activation_function.toLowerCase();
 
-	            if (!activation[function_name]) {
+	            if (!activation[function_name] || !activation.derivatives[function_name]) {
 	                throw new Error(`[ERROR]------- Activation function '${function_name}' or its derivative not found or invalid,`);
 	            }
 
@@ -788,7 +825,7 @@ function requireLayers () {
 	            // check if the activation function is valid
 	            const function_name = activation_function.toLowerCase();
 
-	            if (!activation[function_name]) {
+	            if (!activation[function_name] || !activation.derivatives[function_name]) {
 	                throw new Error(`[ERROR]------- Activation function '${function_name}' or its derivative not found or invalid,`);
 	            }
 
