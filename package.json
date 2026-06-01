@@ -1,12 +1,34 @@
 {
   "name": "neurex-runtime",
-  "version": "1.0.0",
-  "description": "A NodeJS library that allows you to run neurex models for your NodeJS applications",
+  "version": "1.0.1",
+  "description": "A port of Neurex where in you can run neurex models in your browser! 🚀",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "module": "dist/neurex-runtime.esm.js",
+  "browser": "dist/neurex-runtime.umd.js",
+  "exports": {
+      "import": "./dist/neurex-runtime.esm.js",
+      "require": "./index.js"
   },
-  "keywords": ["neurex", "model", "nrx", "neural-network", "neural", "deep learning", "runtime"],
+  "files": [
+      "dist/",
+      "index.js",
+      "core/",
+      "layers/",
+      "params_init/"
+  ],
+  "scripts": {
+    "build":"rollup -c"
+
+  },
+  "keywords": [
+    "neurex",
+    "model",
+    "nrx",
+    "neural-network",
+    "neural",
+    "deep learning",
+    "runtime"
+  ],
   "author": "Kark Angelo V. Pada",
   "license": "MIT",
   "homepage": "https://github.com/KarkAngelo114/neurex-runtime#readme",
@@ -16,5 +38,14 @@
   },
   "bugs": {
     "url": "https://github.com/KarkAngelo114/neurex-runtime/issues"
+  },
+  "dependencies": {
+    "fflate": "^0.8.3"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^29.0.3",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "rollup": "^2.80.0",
+    "rollup-plugin-terser": "^7.0.2"
   }
 }

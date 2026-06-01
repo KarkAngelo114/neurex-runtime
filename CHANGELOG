@@ -1,0 +1,5 @@
+# v1.0.1
+- repurposed to be use in browser-inferencing only. Removed retraining capabilites and data preprocessing tools.
+
+# v1.0.0
+- first release.
