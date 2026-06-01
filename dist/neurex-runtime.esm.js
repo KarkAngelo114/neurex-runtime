@@ -1,3 +1,7 @@
+function getDefaultExportFromCjs (x) {
+	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
+}
+
 var neurexruntime = {};
 
 var globals;
@@ -1167,5 +1171,6 @@ function requireNeurexruntime () {
 }
 
 var neurexruntimeExports = requireNeurexruntime();
+var index = /*@__PURE__*/getDefaultExportFromCjs(neurexruntimeExports);
 
-export { neurexruntimeExports as default };
+export { index as default };
