@@ -1168,6 +1168,7 @@
     	const Runtime = requireCore();
 
     	neurexruntime.Runtime = Runtime;
+    	neurexruntime.default = { Runtime };
     	return neurexruntime;
     }
 
