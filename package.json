@@ -14,9 +14,11 @@
   "files": [
       "dist/",
       "index.js",
+      "index.mjs",
       "core/",
       "layers/",
-      "params_init/"
+      "params_init/",
+      "utils/"
   ],
   "scripts": {
     "build":"rollup -c"
