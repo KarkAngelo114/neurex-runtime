@@ -1,3 +1,10 @@
+
+/**
+ *
+ * A ported, browser compatible library to run inference in the browser
+ *
+ * @module neurex-runtime
+ */
 declare module 'neurex-runtime' {
     /**
      * @class
