@@ -1,6 +1,6 @@
-const { getGlobalParams, replaceWeightParamByIndex } = require("../../../params_init");
+const { getGlobalParams } = require("../../../params_init/globals.js");
 
-exports.Relu = (arr) => {
+const Relu = (arr) => {
     const output = new Float32Array(arr);
     for (let i = 0; i < output.length; i++) {
         output[i] = output[i] > 0 ? output[i] : 0;
@@ -8,7 +8,7 @@ exports.Relu = (arr) => {
     return output;
 };
 
-exports.Sigmoid = (arr) => {
+const Sigmoid = (arr) => {
     const output = new Float32Array(arr);
     for (let i = 0; i < output.length; i++) {
         output[i] = 1 / (1 + Math.exp(-output[i]));
@@ -16,7 +16,7 @@ exports.Sigmoid = (arr) => {
     return output;
 };
 
-exports.Tanh = (arr) => {
+const Tanh = (arr) => {
     const output = new Float32Array(arr);
     for (let i = 0; i < output.length; i++) {
         output[i] = Math.tanh(output[i]);
@@ -24,7 +24,7 @@ exports.Tanh = (arr) => {
     return output;
 };
 
-exports.Softmax = (arr) => {
+const Softmax = (arr) => {
     const output = new Float32Array(arr);
     const maxVal = Math.max(...output);
     let sum = 0;
@@ -41,11 +41,11 @@ exports.Softmax = (arr) => {
     return output;
 };
 
-exports.Linear = (arr) => {
+const Linear = (arr) => {
     return new Float32Array(arr);
 };
 
-exports.getEmbeddings = (tokenVector, embeddingDim, pointer, outputTemplatePointer) => {
+const getEmbeddings = (tokenVector, embeddingDim, pointer, outputTemplatePointer) => {
     const {globalWeights, globalOutputTensorTemplate} = getGlobalParams();
 
     const lookup = globalWeights[pointer];
@@ -69,7 +69,7 @@ exports.getEmbeddings = (tokenVector, embeddingDim, pointer, outputTemplatePoint
     return output;
 }
 
-exports.MatMul = (input, inputSize, outputSize, pointer, outputTemplatePointer) => {
+const MatMul = (input, inputSize, outputSize, pointer, outputTemplatePointer) => {
 
     /**
      * since there's no weights and biases being passed to this function, we use the pointer to reference the parameters
@@ -100,7 +100,7 @@ exports.MatMul = (input, inputSize, outputSize, pointer, outputTemplatePointer) 
     return z_values;
 }
 
-exports.ApplyPadding = (input, inputH, inputW, channels, padTop, padBottom, padLeft, padRight) => {
+const ApplyPadding = (input, inputH, inputW, channels, padTop, padBottom, padLeft, padRight) => {
     const newH = inputH + padTop + padBottom;
     const newW = inputW + padLeft + padRight;
     const output = new Float32Array(newH * newW * channels);
@@ -121,7 +121,7 @@ exports.ApplyPadding = (input, inputH, inputW, channels, padTop, padBottom, padL
 };
 
 
-exports.Convolve = ( input, strides, outputH, outputW, num_filters, kernel_height, kernel_width, depth, inputH, inputW, pointer, outputTemplatePointer ) => {
+const Convolve = ( input, strides, outputH, outputW, num_filters, kernel_height, kernel_width, depth, inputH, inputW, pointer, outputTemplatePointer ) => {
 
     const {globalWeights, globalBiases, globalOutputTensorTemplate} = getGlobalParams();
 
@@ -166,7 +166,7 @@ exports.Convolve = ( input, strides, outputH, outputW, num_filters, kernel_heigh
 };
 
 
-exports.MaxPooling = (arr, pool_size, inputShape, outputShape, strides, outputTemplatePointer) => {
+const MaxPooling = (arr, pool_size, inputShape, outputShape, strides, outputTemplatePointer) => {
     const {globalOutputTensorTemplate} = getGlobalParams();
     const [poolH, poolW] = pool_size;
     const [inputH, inputW, inputD] = inputShape;
@@ -214,7 +214,7 @@ exports.MaxPooling = (arr, pool_size, inputShape, outputShape, strides, outputTe
     };
 }
 
-exports.element_wise_mul = (arr1, arr2) => {
+const element_wise_mul = (arr1, arr2) => {
     let output = new Float32Array(arr1.length);
 
     for (let i = 0; i < arr1.length; i++) {
@@ -224,7 +224,7 @@ exports.element_wise_mul = (arr1, arr2) => {
     return output;
 }
 
-exports.scaleDiff = (arr1, arr2, arr3) => {
+const scaleDiff = (arr1, arr2, arr3) => {
     let output = new Float32Array(arr1.length);
 
     for (let i = 0; i < output.length; i++) {
@@ -234,7 +234,7 @@ exports.scaleDiff = (arr1, arr2, arr3) => {
     return output;
 }
 
-exports.element_wise_sub = (arr1, arr2) => {
+const element_wise_sub = (arr1, arr2) => {
     let output = new Float32Array(arr1.length);
 
     for (let i = 0; i < output.length; i++) {
@@ -242,4 +242,21 @@ exports.element_wise_sub = (arr1, arr2) => {
     }
 
     return output;
+}
+
+
+module.exports = {
+    Relu,
+    Sigmoid,
+    Tanh,
+    Softmax,
+    Linear,
+    getEmbeddings,
+    MatMul,
+    ApplyPadding,
+    Convolve,
+    MaxPooling,
+    element_wise_mul,
+    scaleDiff,
+    element_wise_sub
 }

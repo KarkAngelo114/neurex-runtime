@@ -14,19 +14,13 @@ const {
     element_wise_sub,
     MaxPool,
     scaleDiff
-} = require('../core/bindings');
+} = require('../core/bindings/entry.js');
 
-const {calculateTensorShape, getPaddingSizes} = require('../utils/utils');
-const activation = require('../core/bindings');
+const {calculateTensorShape, getPaddingSizes} = require('../utils/utils.js');
+const activation = require('../core/bindings/entry.js');
 
 
 class Layers {
-    constructor () {
-        this.weights = [];
-        this.biases = [];
-        this.weightGrads = [];
-        this.biaeGrads = [];
-    }
 
     /**
      * @method inputShape

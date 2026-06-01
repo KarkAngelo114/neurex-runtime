@@ -4,10 +4,7 @@ function getDefaultExportFromCjs (x) {
 
 var neurexruntime = {};
 
-var float32Ops = {};
-
-var globals = {};
-
+var globals;
 var hasRequiredGlobals;
 
 function requireGlobals () {
@@ -18,7 +15,7 @@ function requireGlobals () {
 	let globalOutputTensorTemplate = []; // global array of output templates used in feedforward only so that no need to create new Flaot32Array each time a layer function is called and to return an output during feedforward. Applies only to layers
 
 
-	globals.setGlobalParams = (weights, biases, outputTemplates) => {
+	const setGlobalParams = (weights, biases, outputTemplates) => {
 	    globalWeights = weights;
 	    globalBiases = biases;
 	    globalOutputTensorTemplate = outputTemplates;
@@ -28,24 +25,30 @@ function requireGlobals () {
 	 * Use to get paramters from the global store. 
 	 * @returns {Object}
 	*/
-	globals.getGlobalParams = () => {
+	const getGlobalParams = () => {
 	    return {
 	        globalWeights: globalWeights,
 	        globalBiases: globalBiases,
 	        globalOutputTensorTemplate: globalOutputTensorTemplate
 	    }
 	};
+
+	globals = {
+	    setGlobalParams,
+	    getGlobalParams
+	};
 	return globals;
 }
 
-var hasRequiredFloat32Ops;
+var ops;
+var hasRequiredOps;
 
-function requireFloat32Ops () {
-	if (hasRequiredFloat32Ops) return float32Ops;
-	hasRequiredFloat32Ops = 1;
-	const { getGlobalParams, replaceWeightParamByIndex } = requireGlobals();
+function requireOps () {
+	if (hasRequiredOps) return ops;
+	hasRequiredOps = 1;
+	const { getGlobalParams } = requireGlobals();
 
-	float32Ops.Relu = (arr) => {
+	const Relu = (arr) => {
 	    const output = new Float32Array(arr);
 	    for (let i = 0; i < output.length; i++) {
 	        output[i] = output[i] > 0 ? output[i] : 0;
@@ -53,7 +56,7 @@ function requireFloat32Ops () {
 	    return output;
 	};
 
-	float32Ops.Sigmoid = (arr) => {
+	const Sigmoid = (arr) => {
 	    const output = new Float32Array(arr);
 	    for (let i = 0; i < output.length; i++) {
 	        output[i] = 1 / (1 + Math.exp(-output[i]));
@@ -61,7 +64,7 @@ function requireFloat32Ops () {
 	    return output;
 	};
 
-	float32Ops.Tanh = (arr) => {
+	const Tanh = (arr) => {
 	    const output = new Float32Array(arr);
 	    for (let i = 0; i < output.length; i++) {
 	        output[i] = Math.tanh(output[i]);
@@ -69,7 +72,7 @@ function requireFloat32Ops () {
 	    return output;
 	};
 
-	float32Ops.Softmax = (arr) => {
+	const Softmax = (arr) => {
 	    const output = new Float32Array(arr);
 	    const maxVal = Math.max(...output);
 	    let sum = 0;
@@ -86,11 +89,11 @@ function requireFloat32Ops () {
 	    return output;
 	};
 
-	float32Ops.Linear = (arr) => {
+	const Linear = (arr) => {
 	    return new Float32Array(arr);
 	};
 
-	float32Ops.getEmbeddings = (tokenVector, embeddingDim, pointer, outputTemplatePointer) => {
+	const getEmbeddings = (tokenVector, embeddingDim, pointer, outputTemplatePointer) => {
 	    const {globalWeights, globalOutputTensorTemplate} = getGlobalParams();
 
 	    const lookup = globalWeights[pointer];
@@ -114,7 +117,7 @@ function requireFloat32Ops () {
 	    return output;
 	};
 
-	float32Ops.MatMul = (input, inputSize, outputSize, pointer, outputTemplatePointer) => {
+	const MatMul = (input, inputSize, outputSize, pointer, outputTemplatePointer) => {
 
 	    /**
 	     * since there's no weights and biases being passed to this function, we use the pointer to reference the parameters
@@ -145,7 +148,7 @@ function requireFloat32Ops () {
 	    return z_values;
 	};
 
-	float32Ops.ApplyPadding = (input, inputH, inputW, channels, padTop, padBottom, padLeft, padRight) => {
+	const ApplyPadding = (input, inputH, inputW, channels, padTop, padBottom, padLeft, padRight) => {
 	    const newH = inputH + padTop + padBottom;
 	    const newW = inputW + padLeft + padRight;
 	    const output = new Float32Array(newH * newW * channels);
@@ -166,7 +169,7 @@ function requireFloat32Ops () {
 	};
 
 
-	float32Ops.Convolve = ( input, strides, outputH, outputW, num_filters, kernel_height, kernel_width, depth, inputH, inputW, pointer, outputTemplatePointer ) => {
+	const Convolve = ( input, strides, outputH, outputW, num_filters, kernel_height, kernel_width, depth, inputH, inputW, pointer, outputTemplatePointer ) => {
 
 	    const {globalWeights, globalBiases, globalOutputTensorTemplate} = getGlobalParams();
 
@@ -211,7 +214,7 @@ function requireFloat32Ops () {
 	};
 
 
-	float32Ops.MaxPooling = (arr, pool_size, inputShape, outputShape, strides, outputTemplatePointer) => {
+	const MaxPooling = (arr, pool_size, inputShape, outputShape, strides, outputTemplatePointer) => {
 	    const {globalOutputTensorTemplate} = getGlobalParams();
 	    const [poolH, poolW] = pool_size;
 	    const [inputH, inputW, inputD] = inputShape;
@@ -258,7 +261,7 @@ function requireFloat32Ops () {
 	    };
 	};
 
-	float32Ops.element_wise_mul = (arr1, arr2) => {
+	const element_wise_mul = (arr1, arr2) => {
 	    let output = new Float32Array(arr1.length);
 
 	    for (let i = 0; i < arr1.length; i++) {
@@ -268,7 +271,7 @@ function requireFloat32Ops () {
 	    return output;
 	};
 
-	float32Ops.scaleDiff = (arr1, arr2, arr3) => {
+	const scaleDiff = (arr1, arr2, arr3) => {
 	    let output = new Float32Array(arr1.length);
 
 	    for (let i = 0; i < output.length; i++) {
@@ -278,7 +281,7 @@ function requireFloat32Ops () {
 	    return output;
 	};
 
-	float32Ops.element_wise_sub = (arr1, arr2) => {
+	const element_wise_sub = (arr1, arr2) => {
 	    let output = new Float32Array(arr1.length);
 
 	    for (let i = 0; i < output.length; i++) {
@@ -287,7 +290,24 @@ function requireFloat32Ops () {
 
 	    return output;
 	};
-	return float32Ops;
+
+
+	ops = {
+	    Relu,
+	    Sigmoid,
+	    Tanh,
+	    Softmax,
+	    Linear,
+	    getEmbeddings,
+	    MatMul,
+	    ApplyPadding,
+	    Convolve,
+	    MaxPooling,
+	    element_wise_mul,
+	    scaleDiff,
+	    element_wise_sub
+	};
+	return ops;
 }
 
 var entry;
@@ -296,7 +316,7 @@ var hasRequiredEntry;
 function requireEntry () {
 	if (hasRequiredEntry) return entry;
 	hasRequiredEntry = 1;
-	const functions = requireFloat32Ops();
+	const functions = requireOps();
 
 	/**
 	 *  "✅☑️"
@@ -618,12 +638,6 @@ function requireLayers () {
 
 
 	class Layers {
-	    constructor () {
-	        this.weights = [];
-	        this.biases = [];
-	        this.weightGrads = [];
-	        this.biaeGrads = [];
-	    }
 
 	    /**
 	     * @method inputShape
@@ -885,12 +899,12 @@ function requireLayers () {
 	return layers;
 }
 
-var runtime;
-var hasRequiredRuntime;
+var core;
+var hasRequiredCore;
 
-function requireRuntime () {
-	if (hasRequiredRuntime) return runtime;
-	hasRequiredRuntime = 1;
+function requireCore () {
+	if (hasRequiredCore) return core;
+	hasRequiredCore = 1;
 	const Layers = requireLayers();
 	const { setGlobalParams } = requireGlobals();
 
@@ -941,17 +955,15 @@ function requireRuntime () {
 	     * 
 	     * @param {String} model - path to your model
 	     */
-	    loadSavedModel(json) {
+	    loadSavedModel(modelData) {
 	        try {
-	            if (!json) {
-	                throw new Error('[ERROR]------- No JSON provided');
+	            if (!modelData) {
+	                throw new Error('[ERROR]------- No JSON model provided.');
 	            }
 
 	            if (this.layers.length > 0) {
-	                throw new Error('[ERROR]------- A model is already loaded in this instance');
+	                throw new Error('[ERROR]------- A model is already loaded in this instance.');
 	            }
-
-	            const modelData = JSON.parse(json);
 
 	            // Assign properties
 	            this.task = modelData.task;
@@ -1105,8 +1117,8 @@ function requireRuntime () {
 	    }
 	}
 
-	runtime = Runtime;
-	return runtime;
+	core = Runtime;
+	return core;
 }
 
 var hasRequiredNeurexruntime;
@@ -1114,7 +1126,7 @@ var hasRequiredNeurexruntime;
 function requireNeurexruntime () {
 	if (hasRequiredNeurexruntime) return neurexruntime;
 	hasRequiredNeurexruntime = 1;
-	const Runtime = requireRuntime();
+	const Runtime = requireCore();
 
 	neurexruntime.Runtime = Runtime;
 	return neurexruntime;

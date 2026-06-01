@@ -1,6 +1,6 @@
 
-const Layers = require('../layers');
-const { setGlobalParams } = require('../params_init/globals');
+const Layers = require('../layers/layers.js');
+const { setGlobalParams } = require('../params_init/globals.js');
 
 class Runtime {
     constructor () {
@@ -49,17 +49,15 @@ class Runtime {
      * 
      * @param {String} model - path to your model
      */
-    loadSavedModel(json) {
+    loadSavedModel(modelData) {
         try {
-            if (!json) {
-                throw new Error('[ERROR]------- No JSON provided');
+            if (!modelData) {
+                throw new Error('[ERROR]------- No JSON model provided.');
             }
 
             if (this.layers.length > 0) {
-                throw new Error('[ERROR]------- A model is already loaded in this instance');
+                throw new Error('[ERROR]------- A model is already loaded in this instance.');
             }
-
-            const modelData = JSON.parse(json);
 
             // Assign properties
             this.task = modelData.task;

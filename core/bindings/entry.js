@@ -1,4 +1,4 @@
-const functions = require('./float32Ops');
+const functions = require('./float32Ops/ops.js');
 
 /**
  *  "✅☑️"
