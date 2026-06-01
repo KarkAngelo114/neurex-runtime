@@ -1173,7 +1173,9 @@
 
     var neurexruntimeExports = requireNeurexruntime();
 
-    exports["default"] = neurexruntimeExports;
+    const { Runtime } = neurexruntimeExports;
+
+    exports.Runtime = Runtime;
 
     Object.defineProperty(exports, '__esModule', { value: true });
 

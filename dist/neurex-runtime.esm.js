@@ -1167,4 +1167,6 @@ function requireNeurexruntime () {
 
 var neurexruntimeExports = requireNeurexruntime();
 
-export { neurexruntimeExports as default };
+const { Runtime } = neurexruntimeExports;
+
+export { Runtime };

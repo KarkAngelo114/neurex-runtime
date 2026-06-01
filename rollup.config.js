@@ -3,7 +3,7 @@ const commonjs = require('@rollup/plugin-commonjs');
 
 module.exports = [
     {
-        input: 'index.js', 
+        input: 'index.mjs', 
         output: {
             file: 'dist/neurex-runtime.umd.js',
             format: 'umd',
@@ -13,7 +13,7 @@ module.exports = [
         plugins: [resolve(), commonjs({ defaultIsModuleExports: true })]
     },
     {
-        input: 'index.js',
+        input: 'index.mjs',
         output: {
             file: 'dist/neurex-runtime.esm.js',
             format: 'esm',
