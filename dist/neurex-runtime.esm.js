@@ -2,6 +2,8 @@ function getDefaultExportFromCjs (x) {
 	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
 }
 
+var neurexruntime = {};
+
 var browser = {};
 
 var hasRequiredBrowser;
@@ -3846,7 +3848,6 @@ function requireRuntime () {
 	return runtime;
 }
 
-var neurexruntime;
 var hasRequiredNeurexruntime;
 
 function requireNeurexruntime () {
@@ -3854,9 +3855,7 @@ function requireNeurexruntime () {
 	hasRequiredNeurexruntime = 1;
 	const Runtime = requireRuntime();
 
-	neurexruntime= {
-	    Runtime
-	};
+	neurexruntime.Runtime = Runtime;
 	return neurexruntime;
 }
 
