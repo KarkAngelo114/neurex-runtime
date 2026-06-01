@@ -726,7 +726,7 @@ function requireLayers () {
 
 	            let function_name = activation_function.toLowerCase();
 
-	            if (!activation[function_name] || !activation.derivatives[function_name]) {
+	            if (!activation[function_name]) {
 	                throw new Error(`[ERROR]------- Activation function '${function_name}' or its derivative not found or invalid,`);
 	            }
 
@@ -788,7 +788,7 @@ function requireLayers () {
 	            // check if the activation function is valid
 	            const function_name = activation_function.toLowerCase();
 
-	            if (!activation[function_name] || !activation.derivatives[function_name]) {
+	            if (!activation[function_name]) {
 	                throw new Error(`[ERROR]------- Activation function '${function_name}' or its derivative not found or invalid,`);
 	            }
 
