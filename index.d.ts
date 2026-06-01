@@ -10,14 +10,14 @@ declare module 'neurex-runtime' {
      * @class
      *
      * The `Runtime` class is the core of this library. Similar to `Neurex` core class in the `NeurexJS` library,
-     * the `Runtime` class can load models and perform inference, but in different way.
+     * the `Runtime` class can also load models and perform inference
      */
     export class Runtime {
         /**
          * @async
          * @method loadSavedModel is the method use for loading the model. But unlike on `NeurexJS` main library where you can load an `.nrx` file, this method accepts a parsed JSON. Therefore, your model must be in JSON format so that you can import the model and parsed it's contents.
          * @param modelData parsed JSON data
-         * @throws {Error} if reading JSON data has a problem or in model configuration 
+         * @throws {Error} if reading JSON data has a problem or model configuration 
          */
         loadSavedModel(modelData: Object): void;
 

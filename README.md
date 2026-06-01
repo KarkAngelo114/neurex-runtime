@@ -1,26 +1,26 @@
 # Neurex-Runtime
 
-A browser port of the main library [Neurex](https://github.com/KarkAngelo114/Neurex) to run models on your browsers for browser inferencing! Bring intelligence right on your client's browsers now!
+A browser compatible port of the main library [Neurex](https://github.com/KarkAngelo114/Neurex) to run models on your browsers for browser inferencing! Bring intelligence right on your browsers now! 🚀
 
 ## Installation
 via CDN:
 ```html
-<script src="https://cdn.jsdelivr.net/gh/KarkAngelo114/neurex-runtime@cdfd8ae/dist/neurex-runtime.umd.js" defer></script> 
+<script src="https://cdn.jsdelivr.net/npm/neurex-runtime/dist/neurex-runtime.umd.js"></script>
 ```
 
 via NPM:
 ```bash
-npm install git+https://github.com/KarkAngelo114/neurex-runtime.git 
+npm install neurex-runtime
 ```
 
 ## Usage
-If you're working on vanilla projects, simply you can use the CDN in the script tag. The example below is how to load a model, and run an inference prediction of an XOR.
+If you're working on vanilla projects, simply you can use the CDN in the script tag. The example below is how to load a model, and run an inference prediction of an XOR problem.
 
 ```html
     <!DOCTYPE html>
     <html>
         <head>
-            <script src="https://cdn.jsdelivr.net/gh/KarkAngelo114/neurex-runtime@cdfd8ae/dist/neurex-runtime.umd.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/neurex-runtime/dist/neurex-runtime.umd.js"></script>
         </head>
 
         <body>
@@ -91,7 +91,7 @@ function App() {
         const pred = await nrx.current.predict([input]); // run the inference
 
         /*
-        * Note: The outputs are float32array. You can convert it by using Array.from() if you have to.
+        * Note: The outputs are float32array. You can convert it by using Array.from() if you have to. It is better to log first * what does the predict() outputs.
         */
     }
 

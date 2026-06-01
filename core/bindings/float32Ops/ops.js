@@ -1,3 +1,7 @@
+/**
+  * this runtime version only needs feedforward related functions
+  */
+
 const { getGlobalParams } = require("../../../params_init/globals.js");
 
 const Relu = (arr) => {

@@ -1,4 +1,9 @@
 
+ /**
+  * this runtime version only needs feedforward related functions
+  */
+
+// import necessary modules
 const Layers = require('../layers/layers.js');
 const { setGlobalParams } = require('../params_init/globals.js');
 
@@ -29,18 +34,7 @@ class Runtime {
         this.optimizer = 'sgd';
         this.learning_rate = 0.001;
 
-        // Optimizer state for each layer (weights and biases)
-        this.optimizerStates = {
-            weights: [],
-            biases: []
-        };
-
         this.isfailed = false;
-        this.weightGrads = [];
-        this.biasGrads = [];
-
-        this.checkpoint = 0; // if set to N, then every N of epochs will save the model, even if it's not yet fully train. Default is 0
-        this.isInit = false;
 
         this.parametric_layers = []; 
     }

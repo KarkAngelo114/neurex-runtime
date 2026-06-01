@@ -4,6 +4,10 @@
  * Read here about Plugin-style architecture: https://medium.com/omarelgabrys-blog/plug-in-architecture-dec207291800
  */
 
+ /**
+  * this runtime version only needs feedforward related functions
+  */
+
 
 const {
     getEmbeddings,

@@ -1,7 +1,7 @@
 {
   "name": "neurex-runtime",
   "version": "1.0.1",
-  "description": "A port of Neurex where in you can run neurex models in your browser! 🚀",
+  "description": "A browser compatible port of Neurex where in you can run in-browser inference with your trained models! 🚀",
   "main": "index.js",
   "module": "dist/neurex-runtime.esm.js",
   "browser": "dist/neurex-runtime.umd.js",
@@ -31,7 +31,9 @@
     "neural-network",
     "neural",
     "deep learning",
-    "runtime"
+    "runtime",
+    "browser",
+    "node"
   ],
   "author": "Kark Angelo V. Pada",
   "license": "MIT",

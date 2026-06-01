@@ -1,3 +1,8 @@
+/**
+  * this runtime version only needs feedforward related functions.
+  * No need to use native bindings
+  */
+
 const functions = require('./float32Ops/ops.js');
 
 /**
