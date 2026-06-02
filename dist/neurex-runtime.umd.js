@@ -1002,14 +1002,14 @@
     	     * 
     	     * @param {String} model - path to your model
     	     */
-    	    loadSavedModel(modelData) {
+    	    async loadSavedModel(modelData) {
     	        try {
     	            if (!modelData) {
     	                throw new Error('[ERROR]------- No JSON model provided.');
     	            }
 
     	            if (this.layers.length > 0) {
-    	                console.warn(`[WARN]------- A model is already loaded in this instance. If you you're going to load another model, you have to instantiate another class`);
+    	                console.warn(`[WARN]------- A model is already loaded in this instance. If you're going to load another model, you have to instantiate another class`);
     	                return;
     	            }
 
