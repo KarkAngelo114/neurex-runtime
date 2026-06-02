@@ -1003,7 +1003,8 @@ function requireCore () {
 	            }
 
 	            if (this.layers.length > 0) {
-	                throw new Error('[ERROR]------- A model is already loaded in this instance.');
+	                console.warn(`[WARN]------- A model is already loaded in this instance. If you you're going to load another model, you have to instantiate another class`);
+	                return;
 	            }
 
 	            // Assign properties
@@ -1068,11 +1069,6 @@ function requireCore () {
 	                
 	                return newLayer;
 	            });
-
-	            for (let i = 0; i < this.weights.length; i++) {
-	                this.weightGrads.push(new Float32Array(this.weights[i].length).fill(0));
-	                this.biasGrads.push(new Float32Array(this.biases[i].length).fill(0));
-	            }
 
 	            console.log('[SUCCESS]------- Model loaded successfully');
 	        } catch (error) {
