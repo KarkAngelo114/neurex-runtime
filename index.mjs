@@ -1,3 +1,9 @@
 import pkg from './index.js';
 
-export const { Runtime } = pkg;
+export const { 
+    Runtime, 
+    buildVocab,
+    buildWord2Id,
+    Encode,
+    tokenize
+} = pkg;

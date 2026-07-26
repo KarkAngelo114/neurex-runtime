@@ -37,4 +37,27 @@ declare module 'neurex-runtime' {
         */
         predict(input: Number[][]): Float32Array;
     }
+
+    /**
+     * @function buildVocab - allows you to tokenized an entire corpus into tokens of words, symbols, numbers and removing duplicated words.
+     * @param sentences an array of sentences or large corpus
+     * @returns {String} an array of tokenized words
+     */
+    export function buildVocab(sentences: String): Array<String>;
+
+    /**
+     * @function buildWord2Id - this function assign unique token IDs to tokenized words. These token IDs will be use to `Encode` input tokenized words.
+     * @param {Array<String>} vocab tokenized words
+     * @returns {Object} an object containing key value pairs. Each key (words) has corresponding value (token ID)
+     */
+    export function buildWord2Id(vocab: String[]): Object;
+
+    /**
+     * @function Encode - this function tokenize a sentence and assign token IDs returning an array of token IDs.
+     * @param {String} sentence input sentence or prompt
+     * @param {Object} buildWord2Id_output the output after calling `buildWord2Id()` function. This key-value object will be use to encode the input sentence and assign corresponding token IDs based on based on the words in `buildWord2Id_output`
+     * @param {Number} max_length The length of the encoded token containing token IDs.
+     * @returns {Array<Number>} an array of token IDs to be use for token embeddings in the embedding layer 
+     */
+    export function Encode(sentence: String, buildWord2Id_output: Object, max_length: Number): Array<Number>;
 }
