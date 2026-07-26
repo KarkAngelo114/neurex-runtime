@@ -1,8 +1,4 @@
-/**
-  * this runtime version only needs feedforward related functions
-  */
-
-const { getGlobalParams } = require("../../../params_init/globals.js");
+const { getGlobalParams } = require("../../../params_init");
 
 const Relu = (arr) => {
     const output = new Float32Array(arr);
@@ -49,10 +45,46 @@ const Linear = (arr) => {
     return new Float32Array(arr);
 };
 
-const getEmbeddings = (tokenVector, embeddingDim, pointer, outputTemplatePointer) => {
-    const {globalWeights, globalOutputTensorTemplate} = getGlobalParams();
+const DReLu = (arr) => {
+    const output = new Float32Array(arr);
+    for (let i = 0; i < output.length; i++) {
+        output[i] = output[i] > 0 ? 1 : 0;
+    }
+    return output;
+};
 
-    const lookup = globalWeights[pointer];
+const DSigmoid = (arr) => {
+    const output = new Float32Array(arr);
+    for (let i = 0; i < output.length; i++) {
+        const s = 1 / (1 + Math.exp(-output[i]));
+        output[i] = s * (1 - s);
+    }
+    return output;
+};
+
+const DTanh = (arr) => {
+    const output = new Float32Array(arr);
+    for (let i = 0; i < output.length; i++) {
+        const t = Math.tanh(output[i]);
+        output[i] = 1 - t * t;
+    }
+    return output;
+};
+
+const DSoftmax = (arr) => {
+
+    return new Float32Array(arr.length).fill(1);
+};
+
+const DLinear = (arr) => {
+    const output = new Float32Array(arr.length);
+    output.fill(1);
+    return output;
+};
+
+const getEmbeddings = (tokenVector, embeddingDim, lookup, outputTemplatePointer) => {
+    const {globalOutputTensorTemplate} = getGlobalParams();
+
     const output = globalOutputTensorTemplate[outputTemplatePointer];
 
     // helper function
@@ -73,19 +105,13 @@ const getEmbeddings = (tokenVector, embeddingDim, pointer, outputTemplatePointer
     return output;
 }
 
-const MatMul = (input, inputSize, outputSize, pointer, outputTemplatePointer) => {
-
-    /**
-     * since there's no weights and biases being passed to this function, we use the pointer to reference the parameters
-     */
-
-    const {globalWeights, globalBiases, globalOutputTensorTemplate} = getGlobalParams();
+const MatMul = (input, inputSize, outputSize, weights, biases, outputTemplatePointer) => {
+    const {globalOutputTensorTemplate} = getGlobalParams();
     
     const z_values = globalOutputTensorTemplate[outputTemplatePointer]; // use the output template pointer to get the corresponding pre-allocated output tensor
 
-    
     // 1. Initialize with Biases (Faster than adding them in a separate loop later)
-    z_values.set(globalBiases[pointer]);
+    z_values.set(biases);
 
     // 2. Perform Weighted Sum
     // We iterate through each input neuron
@@ -97,7 +123,7 @@ const MatMul = (input, inputSize, outputSize, pointer, outputTemplatePointer) =>
 
         // Multiply the input by every weight connecting to output neurons
         for (let j = 0; j < outputSize; j++) {
-            z_values[j] += inputVal * globalWeights[pointer][offset + j];
+            z_values[j] += inputVal * weights[offset + j];
         }
     }
 
@@ -124,44 +150,64 @@ const ApplyPadding = (input, inputH, inputW, channels, padTop, padBottom, padLef
     };
 };
 
+const Convolve = (input, strides, outputShape, kernelShape, inputShape, weights, biases) => {
 
-const Convolve = ( input, strides, outputH, outputW, num_filters, kernel_height, kernel_width, depth, inputH, inputW, pointer, outputTemplatePointer ) => {
+    const [numFilters, kernelH, kernelW, depth] = kernelShape;
+    const [inputH, inputW] = inputShape;
+    const [outputH, outputW] = outputShape;
 
-    const {globalWeights, globalBiases, globalOutputTensorTemplate} = getGlobalParams();
+    const output = new Float32Array(outputH * outputW * numFilters);
 
-    const output = globalOutputTensorTemplate[outputTemplatePointer];
+    const kernelSize = kernelH * kernelW * depth;
 
-    for (let f = 0; f < num_filters; f++) {
+    for (let y = 0; y < outputH; y++) {
 
-        const bias = globalBiases[pointer][f];
+        const baseY = y * strides;
 
-        for (let y = 0; y < outputH; y++) {
-            for (let x = 0; x < outputW; x++) {
+        for (let x = 0; x < outputW; x++) {
 
-                let sum = 0;
+            const baseX = x * strides;
 
-                for (let ky = 0; ky < kernel_height; ky++) {
-                    for (let kx = 0; kx < kernel_width; kx++) {
-                        for (let c = 0; c < depth; c++) {
+            const outBase = (y * outputW + x) * numFilters;
 
-                            const inY = y * strides + ky;
-                            const inX = x * strides + kx;
+            for (let f = 0; f < numFilters; f++) {
 
-                            if (inY < inputH && inX < inputW) {
+                let sum = biases[f];
 
-                                const inputIndex = ((inY * inputW + inX) * depth + c);
+                const filterOffset = f * kernelSize;
 
-                                const kernelIndex = (((f * kernel_height + ky) * kernel_width + kx) * depth + c);
+                for (let ky = 0; ky < kernelH; ky++) {
 
-                                sum += input[inputIndex] * globalWeights[pointer][kernelIndex];
-                            }
+                    const inY = baseY + ky;
+
+                    if (inY >= inputH) continue;
+
+                    for (let kx = 0; kx < kernelW; kx++) {
+
+                        const inX = baseX + kx;
+
+                        if (inX >= inputW) continue;
+
+                        const inputBase = (inY * inputW + inX) * depth;
+
+                        const kernelBase = filterOffset + (ky * kernelW + kx) * depth;
+
+                        let c = 0;
+
+                        for (; c <= depth - 4; c += 4) {
+                            sum += input[inputBase + c] * weights[kernelBase + c];
+                            sum += input[inputBase + c + 1] * weights[kernelBase + c + 1];
+                            sum += input[inputBase + c + 2] * weights[kernelBase + c + 2];
+                            sum += input[inputBase + c + 3] * weights[kernelBase + c + 3];
+                        }
+
+                        for (; c < depth; c++) {
+                            sum += input[inputBase + c] * weights[kernelBase + c];
                         }
                     }
                 }
 
-                const outIndex = ((y * outputW + x) * num_filters + f);
-
-                output[outIndex] = sum + bias;
+                output[outBase + f] = sum;
             }
         }
     }
@@ -169,6 +215,32 @@ const Convolve = ( input, strides, outputH, outputW, num_filters, kernel_height,
     return output;
 };
 
+const DilateInput = (input, shape, stride) => {
+    const [H, W, C] = shape;
+    const dilatedH = (H - 1) * stride + 1;
+    const dilatedW = (W - 1) * stride + 1;
+    
+    const dilatedSize = dilatedH * dilatedW * C;
+    const dilated = new Float32Array(dilatedSize);
+
+    for (let c = 0; c < C; c++) {
+        for (let h = 0; h < H; h++) {
+            for (let w = 0; w < W; w++) {
+                const srcIdx = (h * W + w) * C + c;
+                const dilatedHIdx = h * stride;
+                const dilatedWIdx = w * stride;
+                const dstIdx = (dilatedHIdx * dilatedW + dilatedWIdx) * C + c;
+                dilated[dstIdx] = input[srcIdx];
+            }
+        }
+    }
+
+    return {
+        data: dilated,
+        dilatedHeight: dilatedH,
+        dilatedWidth: dilatedW
+    };
+};
 
 const MaxPooling = (arr, pool_size, inputShape, outputShape, strides, outputTemplatePointer) => {
     const {globalOutputTensorTemplate} = getGlobalParams();
@@ -218,31 +290,30 @@ const MaxPooling = (arr, pool_size, inputShape, outputShape, strides, outputTemp
     };
 }
 
-const element_wise_mul = (arr1, arr2) => {
-    let output = new Float32Array(arr1.length);
+const recurrentMatMul = (input, prevHiddenState,  inputWeightShape, recurrentWeightShape, weights, biases, outputTemplatePointer) => {
+    const { globalOutputTensorTemplate } = getGlobalParams();
+    // The weights were concatenated during initialization as:
+    // [input_weights..., recurrent_weights...]
+    const inputSize = inputWeightShape[0];
+    const units = inputWeightShape[1];
+    const range_input_weights = inputSize * units;
+    const output = globalOutputTensorTemplate[outputTemplatePointer];
 
-    for (let i = 0; i < arr1.length; i++) {
-        output[i] = arr1[i] * arr2[i];
-    }
+    const input_weights = weights.subarray(0, range_input_weights);
+    const recurrent_weights = weights.subarray(range_input_weights, range_input_weights + recurrentWeightShape[0] * recurrentWeightShape[1]);
 
-    return output;
-}
+    for (let j = 0; j < units; j++) {
+        let z = biases[j];
 
-const scaleDiff = (arr1, arr2, arr3) => {
-    let output = new Float32Array(arr1.length);
+        for (let i = 0; i < inputSize; i++) {
+            z += input[i] * input_weights[i * units + j];
+        }
 
-    for (let i = 0; i < output.length; i++) {
-        output[i] = (arr1[i] - arr2[i]) * arr3[i];
-    }
+        for (let h = 0; h < units; h++) {
+            z += prevHiddenState[h] * recurrent_weights[h * units + j];
+        }
 
-    return output;
-}
-
-const element_wise_sub = (arr1, arr2) => {
-    let output = new Float32Array(arr1.length);
-
-    for (let i = 0; i < output.length; i++) {
-        output[i] = arr1[i] - arr2[i];
+        output[j] = z;
     }
 
     return output;
@@ -255,12 +326,17 @@ module.exports = {
     Tanh,
     Softmax,
     Linear,
+    DReLu,
+    DSigmoid,
+    DTanh,
+    DSoftmax,
+    DLinear,
     getEmbeddings,
     MatMul,
     ApplyPadding,
     Convolve,
+    DilateInput,
+    Convolve,
     MaxPooling,
-    element_wise_mul,
-    scaleDiff,
-    element_wise_sub
+    recurrentMatMul,
 }

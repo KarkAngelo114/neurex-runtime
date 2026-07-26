@@ -1,4 +1,8 @@
-# v1.0.1
+# v1.0.2 (In Development)
+### What's new
+- added support for vanilla recurrent models
+
+# v1.0.1 (Latest)
 - repurposed to be browser compatible. Removed retraining capabilites and data preprocessing tools.
 
 # v1.0.0

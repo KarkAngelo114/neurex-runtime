@@ -1,6 +1,6 @@
 {
   "name": "neurex-runtime",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A browser compatible port of Neurex where in you can run in-browser inference with your trained models! 🚀",
   "main": "index.js",
   "module": "dist/neurex-runtime.esm.js",

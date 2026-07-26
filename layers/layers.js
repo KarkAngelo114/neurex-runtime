@@ -8,23 +8,24 @@
   * this runtime version only needs feedforward related functions
   */
 
+const activation = require('../core/bindings/entry');
 
-const {
-    getEmbeddings,
-    MatMul, 
-    applyPadding,
-    Convolve,
-    element_wise_mul,
-    element_wise_sub,
-    MaxPool,
-    scaleDiff
-} = require('../core/bindings/entry.js');
-
-const {calculateTensorShape, getPaddingSizes} = require('../utils/utils.js');
-const activation = require('../core/bindings/entry.js');
+// import modular functions of different layers. 
+const inputConfig = require('./layer_functions/inputLayer');
+const ann = require('./layer_functions/connectedLayer');
+const cnn = require('./layer_functions/convolutionalLayer');
+const maxpool = require('./layer_functions/maxPooling');
+const embedding = require('./layer_functions/embeddingLayer');
+const rnn = require('./layer_functions/recurrentCell')
 
 
 class Layers {
+    constructor () {
+        this.weights = [];
+        this.biases = [];
+        this.weightGrads = [];
+        this.biaeGrads = [];
+    }
 
     /**
      * @method inputShape
@@ -39,31 +40,7 @@ class Layers {
 
      the inputShape() method allows you to get the shape of your input.
      */
-    inputShape(shapeConfig) {
-        try {
-            if (shapeConfig.features) {
-                const features = shapeConfig.features;
-                this.input_shape = null;
-                return {
-                    layer_name: "input_layer",
-                    layer_size: features,
-                    input_shape: null
-                };
-            } else if (shapeConfig.height && shapeConfig.width && shapeConfig.depth) {
-                const { height, width, depth } = shapeConfig;
-
-                return {
-                    layer_name: "input_layer",
-                    layer_size: height * width * depth,
-                    input_shape: [height, width, depth]
-                };
-            } else {
-                throw new Error(`[ERROR]------- Invalid input shape config`);
-            }
-        } catch (error) {
-            console.error(error.message);
-        }
-    }
+    inputShape = (shapeConfig) => inputConfig(shapeConfig);
 
     /**
     * Creates an embedding layer for token encoding.
@@ -81,30 +58,21 @@ class Layers {
             vocabSize: vocabSize,
             embeddingDim: embeddingDim,
             maxSequenceLength: maxSequenceLength,
-            feedforward: (input, current_layer, pointer, outputTemplatePointer) => {
-                const embeddingDim = current_layer.embeddingDim;
-
-                const output = getEmbeddings(input, embeddingDim, pointer, outputTemplatePointer);
-                return {
-                    outputs: output, 
-                    z_values: output,
-                    incrementor_value: 1
-                };
-            }
+            feedforward: (input, current_layer, pointer, outputTemplatePointer) => embedding.feedforward(input, current_layer, pointer, outputTemplatePointer),
         }
     }
 
     /**
      * @method connectedLayer
-     * @param {String} activation specify the activation function for this layer (Available: sigmoid, relu, tanh, linear)
-     * @param {Number} layer_size specify the number of neuron for this layer.
+     * @param {Number} layer_size specify the number of neuron for this layer. Default is `5`
+     * @param {String} activation specify the activation function for this layer (Available: sigmoid, relu, tanh, linear, softmax). Default is `relu`.
      * @throws {Error} When activation function is undefined (no activation is provided) or layer size is not provided or it's 0
      * @returns {Object}
      *
      * Allows you to build a layer with number of neurons and the activation function to use in a layer. Stacking more layers will
      * build connected layers or multilayer perceptron
      */
-    connectedLayer(activation_function = 'relu', layer_size = 5) {
+    connectedLayer(layer_size = 5, activation_function = 'relu') {
         try {
 
             if (!activation_function || !layer_size || layer_size <= 0) {
@@ -118,26 +86,11 @@ class Layers {
             }
 
             return {
-                "layer_name":"connected_layer", 
-                "activation_function":activation[function_name], 
-                "derivative_activation_function":activation.derivatives[function_name],
-                "layer_size":layer_size,
-                feedforward: (input, current_layer, pointer, outputTemplatePointer) => {
-
-                    const [inputSize, outputSize] = current_layer.weightShape;
-                    const z_values = MatMul(input, inputSize, outputSize, pointer, outputTemplatePointer);
-                    const activation_function = activation[function_name];
-
-                    let outputs = activation_function(z_values);
-                    
-                    if (outputs.some(v => Number.isNaN(v))) throw new Error("Error - output array has NaNs");
-                    
-                    return {
-                        outputs, 
-                        z_values,
-                        incrementor_value: 1
-                    };
-                },
+                layer_name: "connected_layer", 
+                activation_function: activation[function_name], 
+                derivative_activation_function: activation.derivatives[function_name],
+                layer_size: layer_size,
+                feedforward: (input, current_layer, pointer, outputTemplatePointer) => ann.feedforward(input, current_layer, pointer, outputTemplatePointer),
             };
         }
         catch (error) {
@@ -180,51 +133,19 @@ class Layers {
             }
 
             return {
-                "layer_name":"convolutionalLayer",
-                "activation_function":activation[function_name],
-                "derivative_activation_function":activation.derivatives[function_name],
-                "kernel_size":kernel_size,
-                "filters":filters,
-                "padding":padding.toLowerCase(),
-                "strides":strides,
-                feedforward: (input, current_layer, pointer, outputTemplatePointer) => {
-                    
-                    let [f, kh, kw, kd] = current_layer.weightShape;
-                    let [input_H, input_W, input_D] = current_layer.inputShape; 
-                    let padding = current_layer.padding;
-                    let strides = current_layer.strides;
-
-                    // 1. compute expected output tensor shape
-                    const { OutputHeight, OutputWidth } = calculateTensorShape(input_H, input_W, kh, kw, input_D, current_layer.strides, current_layer.padding);
-
-                    // 2. get padding sizes for each sides
-                    const {top, bottom, left, right} = getPaddingSizes(input_H, input_W, kh, kw, strides, padding);
-
-                    // 3. apply padding
-                    const {data, shape} = applyPadding(input, input_H, input_W, input_D, top, bottom, left, right);
-
-                    // 4. Perform the convolve operation using the shapes calculated in step 1
-                    const convolve_result = Convolve(data,current_layer.strides, OutputHeight, OutputWidth, f, kh, kw, kd, shape[0], shape[1], pointer, outputTemplatePointer);
-
-                    if (convolve_result.some(Number.isNaN)) throw new Error('NaN detected on convolve result');
-
-                    // 5. activate each depth input using the given activation function
-                    const activation_function = activation[function_name];
-
-                    const outputs = activation_function(convolve_result);
-
-                    if (outputs.some(v => Number.isNaN(v))) throw new Error("Error - output array has Nans");
-
-                    return {
-                        outputs: outputs,
-                        z_values: convolve_result,
-                        incrementor_value: 1
-                    };
-                }
+                layer_name: "convolutionalLayer",
+                activation_function: activation[function_name],
+                derivative_activation_function: activation.derivatives[function_name],
+                kernel_size: kernel_size,
+                filters: filters,
+                padding: padding.toLowerCase(),
+                strides: strides,
+                feedforward: (input, current_layer, pointer, outputTemplatePointer) => cnn.feedforward(input, current_layer, pointer, outputTemplatePointer),
             }
         }
         catch (error) {
             console.error(error);
+            process.exit(1);
         }
     }
 
@@ -252,32 +173,46 @@ class Layers {
             if (!strides || strides <= 0) throw new Error(`[ERROR]-------- Strides cannot be empty, less that or equal to 0. Strides: ${strides}`);
 
             return {
-                "layer_name":"maxPooling",
-                "poolSize": poolSize,
-                "padding": padding,
-                "strides":strides,
-                feedforward: (input, current_layer, pointer, outputTemplatePointer) => {
-                    const [inputh, inputw, inputd] = current_layer.inputShape;
-                    const [outputh, outputw, outputd] = current_layer.outputShape;
-                    const [poolHeight, poolWidth] = current_layer.poolSize;
-                    const strides = current_layer.strides;
-                
-                    let {output, maxIndices} = MaxPool(input, [poolHeight, poolWidth], [inputh, inputw, inputd], [outputh, outputw, outputd], strides, outputTemplatePointer);
-
-                    current_layer.maxIndices = maxIndices;
-
-                    if (output.some(v => Number.isNaN(v))) throw new Error("Error - output array has NaNs");
-
-                    return {
-                        outputs:output,
-                        z_values: output,
-                        incrementor_value:0
-                    }
-                },
+                layer_name: "maxPooling",
+                poolSize: poolSize,
+                padding: padding,
+                strides: strides,
+                feedforward: (input, current_layer, pointer, outputTemplatePointer) => maxpool.feedforward(input, current_layer, pointer, outputTemplatePointer),
             }
         }
         catch (error) {
             console.error(error);
+            process.exit(1);
+        }
+    }
+
+    /**
+     * 
+     * @param {Number} units This is the number of hidden units (neurons) in the layer. It dictates the dimensionality of the layer's output space and its internal memory state. 
+     * @param {String} activation_function The activation function applied to the internal hidden state. Default value is `tanh`.
+     * @param {Boolean} return_sequence default value is `false`. If `false`, Outputs only the final hidden state vector at the very last time step. If set to `true`, Outputs the hidden state vector for every single time step in the sequence. Must be set to `true` if another RNN layer follows.
+     * @param {Boolean} return_state default value is `false`. If `true`, the layer will return its final hidden state vector as a separate tensor alongside its standard output.
+     */
+    recurrentCell(units, activation_function = "tanh", return_sequence = false, return_state = false) {
+        try {
+            let function_name = activation_function.toLowerCase();
+
+            if (!activation[function_name] || !activation.derivatives[function_name])  throw new Error(`[ERROR]------- Activation function '${function_name}' or its derivative not found or invalid.`);
+            if (!units || units <= 0) throw new Error(`[ERROR]------- Units cannot be null, negative integer or a 0. | Units: ${units}`);
+
+            return {
+                layer_name: "recurrent_cell", 
+                activation_function: activation[function_name], 
+                derivative_activation_function: activation.derivatives[function_name],
+                units: units,
+                return_sequence: return_sequence,
+                return_state: return_state,
+                feedforward: (input, current_layer, pointer, outputTemplatePointer) => rnn.feedforward(input, current_layer, pointer, outputTemplatePointer),
+            }
+        }
+        catch (error) {
+            console.error(error);
+            process.exit(1);
         }
     }
 }

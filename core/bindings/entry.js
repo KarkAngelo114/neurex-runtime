@@ -1,9 +1,11 @@
+const { getGlobalParams } = require('../../params_init')
+
 /**
   * this runtime version only needs feedforward related functions.
   * No need to use native bindings
   */
 
-const functions = require('./float32Ops/ops.js');
+const functions = require('./float32Ops');
 
 /**
  *  "✅☑️"
@@ -14,7 +16,12 @@ const functions = require('./float32Ops/ops.js');
  * @param {Number} outputTemplatePointer pointer value correspondind to the output template tensor 
  * @returns {Float32Array} flattened embeddings
  */
-const getEmbeddings = (tokenVector, embeddingDim, pointer, outputTemplatePointer) => functions.getEmbeddings(Array.from(tokenVector), embeddingDim, pointer, outputTemplatePointer);
+const getEmbeddings = (tokenVector, embeddingDim, pointer, outputTemplatePointer) => functions.getEmbeddings(
+    Array.from(tokenVector), 
+    embeddingDim, 
+    getGlobalParams().globalWeights[pointer],
+    outputTemplatePointer
+);
 
 /**
  * "✅☑️"
@@ -27,7 +34,15 @@ const getEmbeddings = (tokenVector, embeddingDim, pointer, outputTemplatePointer
  * @param {Number} pointer - a pointer that will be use to index the corresponding parameter from global params
  * @returns 1D array of output
  */
-const MatMul = (inputs, inputSize, outputSize, pointer, outputTemplatePointer) => functions.MatMul(inputs, inputSize, outputSize, pointer, outputTemplatePointer);
+const MatMul = (inputs, inputSize, outputSize, pointer, outputTemplatePointer) => functions.MatMul(
+    inputs, 
+    inputSize, 
+    outputSize, 
+    getGlobalParams().globalWeights[pointer], 
+    getGlobalParams().globalBiases[pointer], 
+    outputTemplatePointer
+);
+
 /**
  * "✅☑️"
  * @function relu
@@ -70,6 +85,46 @@ const linear = (input) => functions.Linear(input);
 
 /**
  * "✅☑️"
+ * @function drelu
+ * @param {Array<Number>} input - 1D array of features 
+ * @returns - 1D array of activated features (Using ReLu Derivative)
+ */
+const drelu = (input) => functions.DReLu(input);
+
+/**
+ * "✅☑️"
+ * @function dsigmoid
+ * @param {Array<Number>} input - 1D array of features 
+ * @returns - 1D array of activated features (Using Sigmoid Derivative)
+ */
+const dsigmoid = (input) => functions.DSigmoid(input);
+
+/**
+ * "✅☑️"
+ * @function dtanh
+ * @param {Array<Number>} input - 1D array of features 
+ * @returns - 1D array of activated features (Using Tanh Derivative)
+ */
+const dtanh = (input) => functions.DTanh(input);
+
+/**
+ * "✅☑️"
+ * @function dsoftmax
+ * @param {Array<Number>} input - 1D array of features 
+ * @returns - 1D array of activated features (Using Softmax Derivative)
+ */
+const dsoftmax = (input) => functions.DSoftmax(input)
+
+/**
+ * "✅☑️"
+ * @function dlinear
+ * @param {Array<Number>} input - 1D array of features 
+ * @returns - 1D array of activated features (Using Linear Derivative)
+ */
+const dlinear = (input) => functions.DLinear(input);
+
+/**
+ * "✅☑️"
  * @param {Float32Array} input 
  * @param {Number} inputH 
  * @param {Number} inputW 
@@ -82,70 +137,36 @@ const linear = (input) => functions.Linear(input);
  */
 const applyPadding = (input, inputH, inputW, channels, padTop, padBottom, padLeft, padRight) => functions.ApplyPadding(input, inputH, inputW, channels, padTop, padBottom, padLeft, padRight);
 
- /**
-  * "✅☑️"
-  * @param {Float32Array} input Float32Array input 
-  * @param {Number} strides Stride value 
-  * @param {Numebr} outputH Expected output height
-  * @param {Number} outputW Expected output width
-  * @param {Numebr} num_filters number of filters
-  * @param {Number} kernel_height kernel height
-  * @param {Number} kernel_width kernel width
-  * @param {Number} depth depth value
-  * @param {Number} inputH current input height
-  * @param {Number} inputW currnet input width
-  * @param {Number} pointer pointer value to get the matching parameter from the global store
-  * @param {Number} outputTemplatePointer pointer value to get the matching output template tensor from the global store 
-  * @returns {Float32Array} Convolution result
-  */
-const Convolve = (input, strides, outputH, outputW, num_filters, kernel_height, kernel_width, depth, inputH, inputW, pointer, outputTemplatePointer) => functions.Convolve(input, strides, outputH, outputW, num_filters, kernel_height, kernel_width, depth, inputH, inputW, pointer, outputTemplatePointer);
-/**
- * 
- * "✅☑️"
- * @function 
- * @param {Array<Number>} flat_arr_1 - a flat array input
- * @param {Array<Number>} flat_arr_2 - a flat array input
- * @returns A flat array output after multiplying input_array_1[i] to the values of input_array_2[i]
- * @throws am error will occured if both array are not equal in length
- */
-const element_wise_mul = (flat_arr_1, flat_arr_2) => {
-
-    if (flat_arr_1.length != flat_arr_2.length) throw new Error(`[ERROR]------- Error: Both arrays are not equal in length. array1: ${flat_arr_1.length} | array2:${flat_arr_2.length}`);
-    
-    return functions.element_wise_mul(flat_arr_1, flat_arr_2);
-}
-
-
-/**
- * 
- * "✅☑️"
- * @function
- * @param {Array<Number>} flat_arr_1 - a flat array input
- * @param {Array<Number>} flat_arr_2 - a flat array input
- * @returns A flat array output after subtracting input_array_1[i] to the values of input_array_2[i]
- * @throws am error will occured if both array are not equal in length
- */
-const element_wise_sub = (flat_arr_1, flat_arr_2) => {
-
-    if (flat_arr_1.length != flat_arr_2.length) throw new Error(`[ERROR]------- Error: Both arrays are not equal in length. array1: ${flat_arr_1.length} | array2:${flat_arr_2.length}`);
-    return functions.element_wise_sub(new Float32Array(flat_arr_1), new Float32Array(flat_arr_2));
-}
-
 /**
  * "✅☑️"
- * @param {Foat32Array} arr1 a flat array input
- * @param {Foat32Array} arr2 a flat array input
- * @param {Foat32Array} arr3 a flat array input
- * @returns a flat array after performing `(arr1[i] - arr2[i]) * arr3[i]`
- * @throws {Error} - if any of the input array are not equal in length
+ * @param {Float32Array} input input to perform convolution
+ * @param {Number} strides stride value
+ * @param {Array<Number>} outputShape [oH, oW]
+ * @param {Array<Number>} kernelShape [num_filters, Kh, Kw, channels]
+ * @param {Array<Number>} inputShape [iH, iW] 
+ * @param {Number} pointer pointer value to fetch corresponding parameters of the layer from the global store
+ * @param {Number} outputTemplatePointer pointer value to fetch allocated tensor of the layer from the global store
+ * @returns {Float32Array} convolution result
  */
-const scaleDiff = (arr1, arr2, arr3) => {
-    if (arr1.length !== arr2.length || arr2.length !== arr3.length || arr1.length !== arr3.length) {
-        throw new Error(`[ERROR]------- Error: All arrays must be equal in length. array1: ${arr1.length} | array2: ${arr2.length} | array3: ${arr3.length}`);
-    }
+const Convolve = (input, strides, outputShape, kernelShape, inputShape, pointer, outputTemplatePointer) => functions.Convolve(
+    input, 
+    strides, 
+    outputShape, 
+    kernelShape, 
+    inputShape, 
+    getGlobalParams().globalWeights[pointer], 
+    getGlobalParams().globalBiases[pointer], 
+    outputTemplatePointer
+);
 
-    return functions.scaleDiff(new Float32Array(arr1), new Float32Array(arr2), new Float32Array(arr3));
-}
+/**
+ * "✅☑️" dilate the input inserting 0s
+ * @param {Float32Array} input 
+ * @param {Array<Number>} shape_array 
+ * @param {Number} strides 
+ * @returns {Object} {data, dilatedHeight, dilatedWidth}
+ */
+const Dilate_Input = (input, shape_array, strides) => functions.DilateInput(input, shape_array, strides);
 
 /**
  * "✅☑️"
@@ -158,43 +179,26 @@ const scaleDiff = (arr1, arr2, arr3) => {
  */
 const MaxPool = (input, poolSize, inputShape, outputShape, strides, outputTemplatePointer) => functions.MaxPooling(input, poolSize, inputShape, outputShape, strides, outputTemplatePointer);
 
-const derivatives = {
-    relu: (input) => {
-        const output = new Float32Array(input.length);
-        for (let i = 0; i < input.length; i++) {
-            output[i] = input[i] > 0 ? 1 : 0;
-        }
-        return output;
-    },
-    sigmoid: (input) => {
-        const sig = functions.Sigmoid(input);
-        const output = new Float32Array(input.length);
-        for (let i = 0; i < input.length; i++) {
-            output[i] = sig[i] * (1 - sig[i]);
-        }
-        return output;
-    },
-    tanh: (input) => {
-        const output = new Float32Array(input.length);
-        for (let i = 0; i < input.length; i++) {
-            const t = Math.tanh(input[i]);
-            output[i] = 1 - t * t;
-        }
-        return output;
-    },
-    softmax: (input) => {
-        // Jacobian diagonal approximation (used in some loss+activation combos)
-        const s = functions.Softmax(input);
-        const output = new Float32Array(input.length);
-        for (let i = 0; i < input.length; i++) {
-            output[i] = s[i] * (1 - s[i]);
-        }
-        return output;
-    },
-    linear: (input) => {
-        return new Float32Array(input.length).fill(1);
-    }
-};
+/**
+ * "☑️"
+ * @param {Float32Array} input input vector
+ * @param {Float32Array} prevHiddenState hidden temporal state
+ * @param {Array<Number>} inputWeightShape input weight shape
+ * @param {Array<Number>} recurrentWeightShape recurrent weight shape
+ * @param {Number} pointer value to reference the weights and biases 
+ * @param {Number} outputTemplatePointer value to reference the output template pointer 
+ * @returns 
+ */
+const recurrentMatMul = (input, prevHiddenState, inputWeightShape, recurrentWeightShape, pointer, outputTemplatePointer) => functions.recurrentMatMul(
+    input, 
+    prevHiddenState,
+    inputWeightShape, 
+    recurrentWeightShape, 
+    getGlobalParams().globalWeights[pointer], 
+    getGlobalParams().globalBiases[pointer],
+    outputTemplatePointer
+);
+
 
 module.exports = {
     getEmbeddings,
@@ -206,9 +210,14 @@ module.exports = {
     linear,
     applyPadding,
     Convolve,
-    element_wise_mul,
-    element_wise_sub,
+    Dilate_Input,
     MaxPool,
-    scaleDiff,
-    derivatives
+    recurrentMatMul,
+    derivatives: {
+        relu: drelu,
+        sigmoid: dsigmoid,
+        tanh: dtanh,
+        softmax: dsoftmax,
+        linear: dlinear
+    },
 }

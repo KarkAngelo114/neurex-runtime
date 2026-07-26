@@ -12,7 +12,7 @@ const setGlobalParams = (weights, biases, outputTemplates) => {
 
 /** 
  * Use to get paramters from the global store. 
- * @returns {Object}
+ * @returns {{globalWeights: Array<Float32Array>, globalBiases: Array<Float32Array>, globalOutputTensorTemplate: Array<Float32Array>}}
 */
 const getGlobalParams = () => {
     return {

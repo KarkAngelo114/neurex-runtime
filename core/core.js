@@ -4,7 +4,7 @@
   */
 
 // import necessary modules
-const Layers = require('../layers/layers.js');
+const Layers = require('../layers');
 const { setGlobalParams } = require('../params_init/globals.js');
 
 class Runtime {
@@ -36,7 +36,8 @@ class Runtime {
 
         this.isfailed = false;
 
-        this.parametric_layers = []; 
+        this.parametric_layers = [];
+        this.miscellaneous = null;
     }
 
     /**
@@ -55,6 +56,7 @@ class Runtime {
             }
 
             // Assign properties
+            this.miscellaneous = modelData.miscellaneous;
             this.task = modelData.task;
             this.loss_function = modelData.loss_function;
             this.epoch_count = modelData.epoch;
@@ -110,6 +112,18 @@ class Runtime {
                     this.output_layers_templates.push(new Float32Array(outputSize));
                     this.parametric_layers.push(layerData.layer_name);
                 }
+                else if (layerData.layer_name === "recurrent_cell") {
+                    const units = layerData.units;
+                    const return_sequence = layerData.return_sequence || false;
+                    const return_state = layerData.return_state || false;
+                    newLayer = layerBuilder.recurrentCell(units, layerData.activation_function_name, return_sequence, return_state);
+                    newLayer.weightShape = layerData.weightShape;
+                    newLayer.inputShape = layerData.inputShape;
+                    newLayer.outputShape = layerData.outputShape;
+                    newLayer.maxSequenceLength = layerData.maxSequenceLength || 1;
+                    this.output_layers_templates.push(new Float32Array(units));
+                    this.parametric_layers.push(layerData.layer_name);
+                }
                 else {
                     throw new Error(`[ERROR] Unknown layer type '${layerData.layer_name}' found in model.`);
                 }
@@ -125,6 +139,14 @@ class Runtime {
 
     get_task_type() {
         return this.task || "Task not specified";
+    }
+
+    /**
+     * @method get_miscellaneous_data
+     * @returns {Object} Saved miscellaneous data upon model saving
+     */
+    get_miscellaneous_data() {
+        return this.miscellaneous;
     }
 
     /**
