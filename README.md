@@ -105,3 +105,55 @@ function App() {
 export default App;
 
 ```
+
+## Other Exported Functions
+
+The library also exports helper functions such as for text tokenization and encoding:
+
+- `buildVocab(sentences: String): Array<String>`
+  - Tokenizes an input corpus into words, symbols, numbers, and removes duplicate tokens.
+  - Use this to create the vocabulary from a set of sentences or a large text corpus.
+
+- `buildWord2Id(vocab: String[]): Object`
+  - Converts a tokenized vocabulary array into a key-value object.
+  - Each token is assigned a unique numeric ID for use during encoding.
+
+- `Encode(sentence: String, buildWord2Id_output: Object, max_length: Number): Array<Number>`
+  - Tokenizes a sentence and maps each token to its corresponding ID.
+  - The returned array of token IDs is padded or truncated to the specified `max_length`.
+  - This output is suitable for token embedding layers in text-based models.
+
+Example usage:
+
+```javascript
+import { buildVocab, buildWord2Id, Encode } from 'neurex-runtime';
+
+const corpus = [
+  "Hello world",
+  "Neurex runtime tokenization example"
+];
+
+const vocab = buildVocab(corpus);
+const word2id = buildWord2Id(vocab);
+const inputIds = Encode("Hello Neurex", word2id, 10);
+```
+
+Vanilla JS:
+
+_Exported functions are exposed under the `NeurexRuntime` namespace._
+
+```html
+
+<script>
+
+    const vocab = NeurexRuntime.buildVocab(corpus);
+    const word2Id = NeurexRuntime.buildWord2Id(vocab);
+    const tokens = NeurexRuntime.Encode("Hello Neurex", word2id, 10);
+
+
+</script>
+
+```
+
+
+
