@@ -1,5 +1,6 @@
 const { recurrentMatMul } = require('../../core/bindings');
 const activation = require('../../core/bindings');
+const { concatenateFloat32Array } = require('../../utils');
 
 /**
  * The feedforward logic of this layer
