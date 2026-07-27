@@ -19,7 +19,8 @@
       "core/",
       "layers/",
       "params_init/",
-      "utils/"
+      "utils/",
+      "preprocessor"
   ],
   "scripts": {
     "build":"rollup -c"
