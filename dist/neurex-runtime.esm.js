@@ -826,7 +826,7 @@ function requireConnectedLayer () {
 	 */
 	const feedforward = (input, current_layer, pointer, outputTemplatePointer) => {
 	    const [inputSize, outputSize] = current_layer.weightShape; // weight shape [input, output]
-	    const z_values = MatMul(input, inputSize, outputSize, pointer, outputTemplatePointer); // perform the MatMul() operation
+	    const z_values = MatMul(input, inputSize, outputSize, pointer); // perform the MatMul() operation
 
 	    const activation_function = activation[current_layer.activation_function.name]; // activation function
 	    let outputs = activation_function(z_values); // use the activation function       
@@ -864,7 +864,7 @@ function requireConvolutionalLayer () {
 	 * @param {Number} outputTemplatePointer a pointer to be used for getting the corresponding output tensor template
 	 * @returns {{ outputs: Float32Array, z_values: Float32Array, incrementor_value: Number }}
 	 */
-	const feedforward = (input, current_layer, pointer, outputTemplatePointer) => {
+	const feedforward = (input, current_layer, pointer) => {
 	    let [f, kh, kw, kd] = current_layer.weightShape;
 	    let [input_H, input_W, input_D] = current_layer.inputShape; 
 	    let padding = current_layer.padding;
@@ -880,7 +880,7 @@ function requireConvolutionalLayer () {
 	    const {data, shape} = applyPadding(input, input_H, input_W, input_D, top, bottom, left, right);
 
 	    // 4. Perform the convolve operation using the shapes calculated in step 1
-	    const convolve_result = Convolve(data, current_layer.strides, [OutputHeight, OutputWidth], [f, kh, kw, kd], [shape[0], shape[1]], pointer, outputTemplatePointer);
+	    const convolve_result = Convolve(data, current_layer.strides, [OutputHeight, OutputWidth], [f, kh, kw, kd], [shape[0], shape[1]], pointer);
 
 	    if (convolve_result.some(Number.isNaN)) throw new Error('NaN detected on convolve result');
 
@@ -919,13 +919,13 @@ function requireMaxPooling () {
 	 * @param {Number} outputTemplatePointer a pointer to be used for getting the corresponding output tensor template
 	 * @returns {{ outputs: Float32Array, z_values: Float32Array, incrementor_value: Number }}
 	 */
-	const feedforward = (input, current_layer, pointer, outputTemplatePointer) => {
+	const feedforward = (input, current_layer, pointer) => {
 	    const [inputh, inputw, inputd] = current_layer.inputShape;
 	    const [outputh, outputw, outputd] = current_layer.outputShape;
 	    const [poolHeight, poolWidth] = current_layer.poolSize;
 	    const strides = current_layer.strides;
 	                
-	    let {output, maxIndices} = MaxPool(input, [poolHeight, poolWidth], [inputh, inputw, inputd], [outputh, outputw, outputd], strides, outputTemplatePointer);
+	    let {output, maxIndices} = MaxPool(input, [poolHeight, poolWidth], [inputh, inputw, inputd], [outputh, outputw, outputd], strides);
 
 	    current_layer.maxIndices = maxIndices;
 
@@ -961,10 +961,10 @@ function requireEmbeddingLayer () {
 	 * @param {Number} outputTemplatePointer a pointer to be used for getting the corresponding output tensor template
 	 * @returns {{ outputs: Float32Array, z_values: Float32Array, incrementor_value: Number }}
 	 */
-	const feedforward = (input, current_layer, pointer, outputTemplatePointer) => {
+	const feedforward = (input, current_layer, pointer) => {
 	    const embeddingDim = current_layer.embeddingDim;
 
-	    const output = getEmbeddings(input, embeddingDim, pointer, outputTemplatePointer);
+	    const output = getEmbeddings(input, embeddingDim, pointer);
 
 	    if (output.some(v => Number.isNaN(v))) throw new Error("Error - output array has NaNs on Embedding layer (feedforward)");
 	    
@@ -999,7 +999,7 @@ function requireRecurrentCell () {
 	 * @param {Number} outputTemplatePointer a pointer to be used for getting the corresponding output tensor template
 	 * @returns {{ outputs: Float32Array, z_values: Float32Array, incrementor_value: Number }}
 	 */
-	const feedforward = (inputSequence, current_layer, pointer, outputTemplatePointer) => {
+	const feedforward = (inputSequence, current_layer, pointer) => {
 
 	    const units = current_layer.units;
 	    // Assume inputSequence is flat: [units * sequence_length]
@@ -1027,8 +1027,7 @@ function requireRecurrentCell () {
 	            current_hidden, 
 	            [current_layer.weightShape[0], current_layer.weightShape[1]], 
 	            [current_layer.weightShape[2], current_layer.weightShape[3]], 
-	            pointer, 
-	            outputTemplatePointer
+	            pointer,
 	        );
 
 	        if (z_t.some(v => Number.isNaN(v))) throw new Error("Error - output array has NaNs on Recurrent layer (feedforward)");
@@ -1135,7 +1134,7 @@ function requireLayers () {
 	            vocabSize: vocabSize,
 	            embeddingDim: embeddingDim,
 	            maxSequenceLength: maxSequenceLength,
-	            feedforward: (input, current_layer, pointer, outputTemplatePointer) => embedding.feedforward(input, current_layer, pointer, outputTemplatePointer),
+	            feedforward: (input, current_layer, pointer) => embedding.feedforward(input, current_layer, pointer),
 	        }
 	    }
 
@@ -1167,7 +1166,7 @@ function requireLayers () {
 	                activation_function: activation[function_name], 
 	                derivative_activation_function: activation.derivatives[function_name],
 	                layer_size: layer_size,
-	                feedforward: (input, current_layer, pointer, outputTemplatePointer) => ann.feedforward(input, current_layer, pointer, outputTemplatePointer),
+	                feedforward: (input, current_layer, pointer) => ann.feedforward(input, current_layer, pointer),
 	            };
 	        }
 	        catch (error) {
@@ -1217,7 +1216,7 @@ function requireLayers () {
 	                filters: filters,
 	                padding: padding.toLowerCase(),
 	                strides: strides,
-	                feedforward: (input, current_layer, pointer, outputTemplatePointer) => cnn.feedforward(input, current_layer, pointer, outputTemplatePointer),
+	                feedforward: (input, current_layer, pointer) => cnn.feedforward(input, current_layer, pointer),
 	            }
 	        }
 	        catch (error) {
@@ -1254,7 +1253,7 @@ function requireLayers () {
 	                poolSize: poolSize,
 	                padding: padding,
 	                strides: strides,
-	                feedforward: (input, current_layer, pointer, outputTemplatePointer) => maxpool.feedforward(input, current_layer, pointer, outputTemplatePointer),
+	                feedforward: (input, current_layer, pointer) => maxpool.feedforward(input, current_layer, pointer),
 	            }
 	        }
 	        catch (error) {
@@ -1284,7 +1283,7 @@ function requireLayers () {
 	                units: units,
 	                return_sequence: return_sequence,
 	                return_state: return_state,
-	                feedforward: (input, current_layer, pointer, outputTemplatePointer) => rnn.feedforward(input, current_layer, pointer, outputTemplatePointer),
+	                feedforward: (input, current_layer, pointer) => rnn.feedforward(input, current_layer, pointer),
 	            }
 	        }
 	        catch (error) {
@@ -1316,7 +1315,6 @@ function requireCore () {
 	    constructor () {
 	        this.weights = [];
 	        this.biases = [];
-	        this.output_layers_templates = [];
 	        this.num_layers = 0;
 	        this.input_size = 1;
 	        this.input_shape = [1, 1, 1];
@@ -1381,7 +1379,6 @@ function requireCore () {
 	                    // Recreate the connected layer with the correct activation and size
 	                    newLayer = layerBuilder.connectedLayer(layerData.layer_size, layerData.activation_function_name);
 	                    newLayer.weightShape = layerData.weightShape;
-	                    this.output_layers_templates.push(new Float32Array(layerData.layer_size));
 	                    this.parametric_layers.push(layerData.layer_name);
 	                } else if (layerData.layer_name === "input_layer") {
 	                    // Recreate the input layer. Note: The input layer doesn't have methods, so this is just for consistency
@@ -1394,7 +1391,6 @@ function requireCore () {
 	                    newLayer.outputShape = layerData.outputShape;
 	                    const [H, W, D] = layerData.outputShape;
 	                    const totalSize = H * W * D;
-	                    this.output_layers_templates.push(new Float32Array(totalSize));
 	                    this.parametric_layers.push(layerData.layer_name);
 	                } else if (layerData.layer_name === "maxPooling") {
 	                    newLayer = layerBuilder.maxPooling(layerData.poolSize, layerData.strides, layerData.padding);
@@ -1402,7 +1398,6 @@ function requireCore () {
 	                    newLayer.outputShape = layerData.outputShape;
 	                    const [H, W, D] = layerData.outputShape;
 	                    const totalSize = H * W * D;
-	                    this.output_layers_templates.push(new Float32Array(totalSize));
 	                }
 	                else if (layerData.layer_name === "EmbeddingLayer") {
 	                    const vocabSize = layerData.vocabSize;
@@ -1414,7 +1409,6 @@ function requireCore () {
 	                    newLayer.outputShape = [1, 1, outputSize];
 	                    newLayer.weightShape = [vocabSize, embeddingDim];
 	                    newLayer.outputSize = outputSize;
-	                    this.output_layers_templates.push(new Float32Array(outputSize));
 	                    this.parametric_layers.push(layerData.layer_name);
 	                }
 	                else if (layerData.layer_name === "recurrent_cell") {
@@ -1426,7 +1420,6 @@ function requireCore () {
 	                    newLayer.inputShape = layerData.inputShape;
 	                    newLayer.outputShape = layerData.outputShape;
 	                    newLayer.maxSequenceLength = layerData.maxSequenceLength || 1;
-	                    this.output_layers_templates.push(new Float32Array(units));
 	                    this.parametric_layers.push(layerData.layer_name);
 	                }
 	                else {
@@ -1506,14 +1499,12 @@ function requireCore () {
 	        let all_layer_outputs = [input];
 	        let zs = [];
 	        
-	        let outputTemplatePointer = 0;
 	        let pointer = 0;
 	        for (let layer_index = 0; layer_index < this.num_layers; layer_index++) {
 	            const current_layer = this.layers[layer_index];
 
-	            const { outputs, z_values, incrementor_value } = current_layer.feedforward(current_input, current_layer, pointer, outputTemplatePointer);
+	            const { outputs, z_values, incrementor_value } = current_layer.feedforward(current_input, current_layer, pointer);
 	            pointer+=incrementor_value;
-	            outputTemplatePointer++;
 
 	            zs.push(z_values);
 	            current_input = outputs;

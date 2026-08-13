@@ -58,7 +58,7 @@ class Layers {
             vocabSize: vocabSize,
             embeddingDim: embeddingDim,
             maxSequenceLength: maxSequenceLength,
-            feedforward: (input, current_layer, pointer, outputTemplatePointer) => embedding.feedforward(input, current_layer, pointer, outputTemplatePointer),
+            feedforward: (input, current_layer, pointer) => embedding.feedforward(input, current_layer, pointer),
         }
     }
 
@@ -90,7 +90,7 @@ class Layers {
                 activation_function: activation[function_name], 
                 derivative_activation_function: activation.derivatives[function_name],
                 layer_size: layer_size,
-                feedforward: (input, current_layer, pointer, outputTemplatePointer) => ann.feedforward(input, current_layer, pointer, outputTemplatePointer),
+                feedforward: (input, current_layer, pointer) => ann.feedforward(input, current_layer, pointer),
             };
         }
         catch (error) {
@@ -140,7 +140,7 @@ class Layers {
                 filters: filters,
                 padding: padding.toLowerCase(),
                 strides: strides,
-                feedforward: (input, current_layer, pointer, outputTemplatePointer) => cnn.feedforward(input, current_layer, pointer, outputTemplatePointer),
+                feedforward: (input, current_layer, pointer) => cnn.feedforward(input, current_layer, pointer),
             }
         }
         catch (error) {
@@ -177,7 +177,7 @@ class Layers {
                 poolSize: poolSize,
                 padding: padding,
                 strides: strides,
-                feedforward: (input, current_layer, pointer, outputTemplatePointer) => maxpool.feedforward(input, current_layer, pointer, outputTemplatePointer),
+                feedforward: (input, current_layer, pointer) => maxpool.feedforward(input, current_layer, pointer),
             }
         }
         catch (error) {
@@ -207,7 +207,7 @@ class Layers {
                 units: units,
                 return_sequence: return_sequence,
                 return_state: return_state,
-                feedforward: (input, current_layer, pointer, outputTemplatePointer) => rnn.feedforward(input, current_layer, pointer, outputTemplatePointer),
+                feedforward: (input, current_layer, pointer) => rnn.feedforward(input, current_layer, pointer),
             }
         }
         catch (error) {

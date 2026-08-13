@@ -8,13 +8,13 @@ const { MaxPool } = require("../../core/bindings");
  * @param {Number} outputTemplatePointer a pointer to be used for getting the corresponding output tensor template
  * @returns {{ outputs: Float32Array, z_values: Float32Array, incrementor_value: Number }}
  */
-const feedforward = (input, current_layer, pointer, outputTemplatePointer) => {
+const feedforward = (input, current_layer, pointer) => {
     const [inputh, inputw, inputd] = current_layer.inputShape;
     const [outputh, outputw, outputd] = current_layer.outputShape;
     const [poolHeight, poolWidth] = current_layer.poolSize;
     const strides = current_layer.strides;
                 
-    let {output, maxIndices} = MaxPool(input, [poolHeight, poolWidth], [inputh, inputw, inputd], [outputh, outputw, outputd], strides, outputTemplatePointer);
+    let {output, maxIndices} = MaxPool(input, [poolHeight, poolWidth], [inputh, inputw, inputd], [outputh, outputw, outputd], strides);
 
     current_layer.maxIndices = maxIndices;
 

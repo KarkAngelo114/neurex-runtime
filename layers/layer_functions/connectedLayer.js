@@ -12,7 +12,7 @@ const activation = require('../../core/bindings');
  */
 const feedforward = (input, current_layer, pointer, outputTemplatePointer) => {
     const [inputSize, outputSize] = current_layer.weightShape; // weight shape [input, output]
-    const z_values = MatMul(input, inputSize, outputSize, pointer, outputTemplatePointer); // perform the MatMul() operation
+    const z_values = MatMul(input, inputSize, outputSize, pointer); // perform the MatMul() operation
 
     const activation_function = activation[current_layer.activation_function.name]; // activation function
     let outputs = activation_function(z_values); // use the activation function       

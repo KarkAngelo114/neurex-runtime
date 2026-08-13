@@ -10,7 +10,7 @@ const { concatenateFloat32Array } = require('../../utils');
  * @param {Number} outputTemplatePointer a pointer to be used for getting the corresponding output tensor template
  * @returns {{ outputs: Float32Array, z_values: Float32Array, incrementor_value: Number }}
  */
-const feedforward = (inputSequence, current_layer, pointer, outputTemplatePointer) => {
+const feedforward = (inputSequence, current_layer, pointer) => {
 
     const units = current_layer.units;
     // Assume inputSequence is flat: [units * sequence_length]
@@ -38,8 +38,7 @@ const feedforward = (inputSequence, current_layer, pointer, outputTemplatePointe
             current_hidden, 
             [current_layer.weightShape[0], current_layer.weightShape[1]], 
             [current_layer.weightShape[2], current_layer.weightShape[3]], 
-            pointer, 
-            outputTemplatePointer
+            pointer,
         );
 
         if (z_t.some(v => Number.isNaN(v))) throw new Error("Error - output array has NaNs on Recurrent layer (feedforward)");

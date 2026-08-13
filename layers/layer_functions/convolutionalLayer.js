@@ -10,7 +10,7 @@ const { XavierInitialization, calculateTensorShape, getPaddingSizes } = require(
  * @param {Number} outputTemplatePointer a pointer to be used for getting the corresponding output tensor template
  * @returns {{ outputs: Float32Array, z_values: Float32Array, incrementor_value: Number }}
  */
-const feedforward = (input, current_layer, pointer, outputTemplatePointer) => {
+const feedforward = (input, current_layer, pointer) => {
     let [f, kh, kw, kd] = current_layer.weightShape;
     let [input_H, input_W, input_D] = current_layer.inputShape; 
     let padding = current_layer.padding;
@@ -26,7 +26,7 @@ const feedforward = (input, current_layer, pointer, outputTemplatePointer) => {
     const {data, shape} = applyPadding(input, input_H, input_W, input_D, top, bottom, left, right);
 
     // 4. Perform the convolve operation using the shapes calculated in step 1
-    const convolve_result = Convolve(data, current_layer.strides, [OutputHeight, OutputWidth], [f, kh, kw, kd], [shape[0], shape[1]], pointer, outputTemplatePointer);
+    const convolve_result = Convolve(data, current_layer.strides, [OutputHeight, OutputWidth], [f, kh, kw, kd], [shape[0], shape[1]], pointer);
 
     if (convolve_result.some(Number.isNaN)) throw new Error('NaN detected on convolve result');
 

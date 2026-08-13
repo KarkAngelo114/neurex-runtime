@@ -9,10 +9,10 @@ const { getEmbeddings } = require('../../core/bindings');
  * @param {Number} outputTemplatePointer a pointer to be used for getting the corresponding output tensor template
  * @returns {{ outputs: Float32Array, z_values: Float32Array, incrementor_value: Number }}
  */
-const feedforward = (input, current_layer, pointer, outputTemplatePointer) => {
+const feedforward = (input, current_layer, pointer) => {
     const embeddingDim = current_layer.embeddingDim;
 
-    const output = getEmbeddings(input, embeddingDim, pointer, outputTemplatePointer);
+    const output = getEmbeddings(input, embeddingDim, pointer);
 
     if (output.some(v => Number.isNaN(v))) throw new Error("Error - output array has NaNs on Embedding layer (feedforward)");
     
