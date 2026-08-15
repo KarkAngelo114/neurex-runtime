@@ -13,34 +13,29 @@ const functions = require('./float32Ops');
  * @param {Array<Number>} tokenVector an array of token vector 
  * @param {Number} embeddingDim embedding dim value
  * @param {Number} pointer pointer value corresponding to the global parameter of weights and biases 
- * @param {Number} outputTemplatePointer pointer value correspondind to the output template tensor 
  * @returns {Float32Array} flattened embeddings
  */
-const getEmbeddings = (tokenVector, embeddingDim, pointer, outputTemplatePointer) => functions.getEmbeddings(
+const getEmbeddings = (tokenVector, embeddingDim, pointer) => functions.getEmbeddings(
     Array.from(tokenVector), 
     embeddingDim, 
     getGlobalParams().globalWeights[pointer],
-    outputTemplatePointer
 );
 
 /**
  * "✅☑️"
  * @function MatMul
  * @param {Float32Array} inputs - 1D float32array of input features
- * @param {Float32Array} weights - 1D float32array of weights
- * @param {Float32Array} biases - 1D float32array of biases
  * @param {Number} inputSize - the output size of the previous layer is the input size of this layer
  * @param {Number} outputSize - the layer size of this layer
  * @param {Number} pointer - a pointer that will be use to index the corresponding parameter from global params
  * @returns 1D array of output
  */
-const MatMul = (inputs, inputSize, outputSize, pointer, outputTemplatePointer) => functions.MatMul(
+const MatMul = (inputs, inputSize, outputSize, pointer) => functions.MatMul(
     inputs, 
     inputSize, 
     outputSize, 
     getGlobalParams().globalWeights[pointer], 
     getGlobalParams().globalBiases[pointer], 
-    outputTemplatePointer
 );
 
 /**
@@ -145,10 +140,9 @@ const applyPadding = (input, inputH, inputW, channels, padTop, padBottom, padLef
  * @param {Array<Number>} kernelShape [num_filters, Kh, Kw, channels]
  * @param {Array<Number>} inputShape [iH, iW] 
  * @param {Number} pointer pointer value to fetch corresponding parameters of the layer from the global store
- * @param {Number} outputTemplatePointer pointer value to fetch allocated tensor of the layer from the global store
  * @returns {Float32Array} convolution result
  */
-const Convolve = (input, strides, outputShape, kernelShape, inputShape, pointer, outputTemplatePointer) => functions.Convolve(
+const Convolve = (input, strides, outputShape, kernelShape, inputShape, pointer) => functions.Convolve(
     input, 
     strides, 
     outputShape, 
@@ -156,7 +150,6 @@ const Convolve = (input, strides, outputShape, kernelShape, inputShape, pointer,
     inputShape, 
     getGlobalParams().globalWeights[pointer], 
     getGlobalParams().globalBiases[pointer], 
-    outputTemplatePointer
 );
 
 /**
@@ -177,7 +170,7 @@ const Dilate_Input = (input, shape_array, strides) => functions.DilateInput(inpu
  * @param {Array<Number>} outputShape - output shape of the tensor
  * @param {Number} strides - determines how many pixels it will skipped
  */
-const MaxPool = (input, poolSize, inputShape, outputShape, strides, outputTemplatePointer) => functions.MaxPooling(input, poolSize, inputShape, outputShape, strides, outputTemplatePointer);
+const MaxPool = (input, poolSize, inputShape, outputShape, strides) => functions.MaxPooling(input, poolSize, inputShape, outputShape, strides);
 
 /**
  * "☑️"
@@ -186,19 +179,38 @@ const MaxPool = (input, poolSize, inputShape, outputShape, strides, outputTempla
  * @param {Array<Number>} inputWeightShape input weight shape
  * @param {Array<Number>} recurrentWeightShape recurrent weight shape
  * @param {Number} pointer value to reference the weights and biases 
- * @param {Number} outputTemplatePointer value to reference the output template pointer 
  * @returns 
  */
-const recurrentMatMul = (input, prevHiddenState, inputWeightShape, recurrentWeightShape, pointer, outputTemplatePointer) => functions.recurrentMatMul(
+const recurrentMatMul = (input, prevHiddenState, inputWeightShape, recurrentWeightShape, pointer) => functions.recurrentMatMul(
     input, 
     prevHiddenState,
     inputWeightShape, 
     recurrentWeightShape, 
     getGlobalParams().globalWeights[pointer], 
     getGlobalParams().globalBiases[pointer],
-    outputTemplatePointer
 );
 
+/**
+ * "✅☑️"
+ * @param {Float32Array} input 
+ * @param {Array<Number>} inputShape 
+ * @param {Array<Number>} outputShape 
+ * @param {Number} strides 
+ * @param {Number} filters 
+ * @param {Array<Number>} weightShape 
+ * @param {Number} pointer 
+ * @returns {Float32Array} trans conv output.
+ */
+const transConv = (input, inputShape, outputShape, strides, filters, weightShape, pointer) => functions.transConv(
+    input, 
+    inputShape, 
+    outputShape, 
+    strides, 
+    filters, 
+    weightShape, 
+    getGlobalParams().globalWeights[pointer], 
+    getGlobalParams().globalBiases[pointer],
+);
 
 module.exports = {
     getEmbeddings,
@@ -213,6 +225,7 @@ module.exports = {
     Dilate_Input,
     MaxPool,
     recurrentMatMul,
+    transConv,
     derivatives: {
         relu: drelu,
         sigmoid: dsigmoid,

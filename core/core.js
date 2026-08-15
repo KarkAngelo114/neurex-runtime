@@ -26,14 +26,6 @@ class Runtime {
         this.depth = 0;
         this.filters = 1;
         this.layers = []; // layers (except input type layers) and their details will store here
-        this.hasSequentiallyBuild = false;
-        this.hasBuilt = false;
-
-        // default configs
-        this.optimizer = 'sgd';
-        this.learning_rate = 0.001;
-
-        this.isfailed = false;
 
         this.parametric_layers = [];
         this.miscellaneous = null;
@@ -118,6 +110,22 @@ class Runtime {
                     newLayer.maxSequenceLength = layerData.maxSequenceLength || 1;
                     this.parametric_layers.push(layerData.layer_name);
                 }
+                else if (layerData.layer_name === "transConvLayer") {
+                    const filters = layerData.filters;
+                    const strides = layerData.strides;
+                    const kernelSize = layerData.kernel_size
+                    newLayer = layerBuilder.transConvLayer(filters, strides, kernelSize, layerData.activation_function_name, layerData.padding, layerData.inputShape);
+                    newLayer.weightShape = layerData.weightShape;
+                    newLayer.inputShape = layerData.inputShape;
+                    newLayer.outputShape = layerData.outputShape;
+                    this.parametric_layers.push(layerData.layer_name);
+                }
+                else if (layerData.layer_name === "Reshape") {
+                    newLayer = layerBuilder.reshape(layerData.targetShape);
+                    newLayer.weightShape = layerData.weightShape;
+                    newLayer.inputShape = layerData.inputShape;
+                    newLayer.outputShape = layerData.outputShape;
+                }
                 else {
                     throw new Error(`[ERROR] Unknown layer type '${layerData.layer_name}' found in model.`);
                 }
@@ -152,7 +160,7 @@ class Runtime {
      produces predictions based on the input data
     */
     async predict(input) {
-        setGlobalParams(this.weights, this.biases, this.output_layers_templates);
+        setGlobalParams(this.weights, this.biases);
 
         if (!this.weights || !this.biases || !this.output_layers_templates) {
             throw new Error("Parameters are missing");

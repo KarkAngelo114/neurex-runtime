@@ -1,5 +1,4 @@
 const { MatMul } = require("../../core/bindings");
-const { XavierInitialization, ifOneHotEndcoded } = require("../../utils/utils");
 const activation = require('../../core/bindings');
 
 /**
@@ -10,7 +9,7 @@ const activation = require('../../core/bindings');
  * @param {Number} outputTemplatePointer a pointer to be used for getting the corresponding output tensor template
  * @returns {{ outputs: Float32Array, z_values: Float32Array, incrementor_value: Number }}
  */
-const feedforward = (input, current_layer, pointer, outputTemplatePointer) => {
+const feedforward = (input, current_layer, pointer) => {
     const [inputSize, outputSize] = current_layer.weightShape; // weight shape [input, output]
     const z_values = MatMul(input, inputSize, outputSize, pointer); // perform the MatMul() operation
 

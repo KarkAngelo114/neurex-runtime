@@ -1,6 +1,7 @@
 # v1.0.2 (In Development)
 ### What's new
 - added support for vanilla recurrent models
+- added support for trans conv
 - added functions used for word processing
 - exposed functions use for word processing tasks (e.g: `buildVocab()`, `buildWord2Id()`, and `Encode()`) under the `NeurexRuntime` namespace (via CDNs).
 

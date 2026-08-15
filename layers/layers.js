@@ -16,7 +16,9 @@ const ann = require('./layer_functions/connectedLayer');
 const cnn = require('./layer_functions/convolutionalLayer');
 const maxpool = require('./layer_functions/maxPooling');
 const embedding = require('./layer_functions/embeddingLayer');
-const rnn = require('./layer_functions/recurrentCell')
+const rnn = require('./layer_functions/recurrentCell');
+const transConv = require('./layer_functions/transConv');
+const reshaper = require('./layer_functions/reshape');
 
 
 class Layers {
@@ -41,6 +43,22 @@ class Layers {
      the inputShape() method allows you to get the shape of your input.
      */
     inputShape = (shapeConfig) => inputConfig(shapeConfig);
+
+    /**
+     * @method reshape changes the dimensions (shape) of the data passing through it without changing the data values. This acts as the `input layer` to bridge data from layers that outputs 1D vector to be feed to convolutional layers which works on spatial grid-like data. 
+     * @param targetShape specify the target shape for the data to be reshape. Default is `[28, 28, 3]`
+     * @returns {Object} The reshape layer object configuration
+    */
+    reshape(targetShape = [28, 28, 3]) {
+        if (targetShape.some(n => !n || n <= 0)) throw new Error(`[ERROR]------- Values should never be 0, null or a negative value.`);
+
+        return {
+            layer_name: 'Reshape',
+            targetShape: targetShape,
+            isParametric: false,
+            feedforward: (input) => reshaper.feedforward(input),
+        }
+    }
 
     /**
     * Creates an embedding layer for token encoding.
@@ -208,6 +226,61 @@ class Layers {
                 return_sequence: return_sequence,
                 return_state: return_state,
                 feedforward: (input, current_layer, pointer) => rnn.feedforward(input, current_layer, pointer),
+            }
+        }
+        catch (error) {
+            console.error(error);
+            process.exit(1);
+        }
+    }
+
+    /**
+     * 
+     * @method transConvLayer
+     * @param {Number} filters the number of filters for this convolutional layer. Produces the same number of output features
+     * @param {Number} strides It determines how much the filter overlaps with the input as it slides across.
+     * @param {Array<Number>} kernel_size the size of the kernel (or filter) that will slide and extracts input features
+     * @param {String} activation_function the activation function to be use for this layer
+     * @param {String} padding adds N amount of padding on all sides. Default is 0
+     * @param {Array<Number>} inputShape use to determine the shape of the input going to this layer, especially if the input comes from layers that works on 1D inputs (e.g. connected layers -> trans convolution where usual output shape of connected layers are [1, 1, outputSize])
+     * @param {Boolean} useBias when set to `false`, the layer will not use bias and will skip bias initialization. Default value is `true`.
+     * @return {Object} transConv layer configs
+     * @throws {Error} if any of the parameters are invalid.
+     */
+    transConvLayer(filters = 1, strides = 1, kernel_size = [3, 3], activation_function = 'relu', padding = "Same", inputShape = [28, 28, 1], useBias = true) {
+        try {
+            if (!filters || filters <= 0) throw new Error(`[ERROR]-------- Filters cannot be empty, less than or equal to 0. Filters: ${filters}`);
+            if (!strides || strides <= 0) throw new Error(`[ERROR]-------- Strides cannot be empty, less that or equal to 0. Strides: ${strides}`);
+            if (!kernel_size || kernel_size.length == 0 || (kernel_size[0] <= 0 || kernel_size[1] <= 0)) throw new Error(`[ERROR]------- Kernels cannot be empty, nor it's height or width is less than or equal to 0. Kernel size: ${kernel_size}`);
+            if (!activation_function || activation_function == undefined || activation_function == null || activation_function === "") throw new Error(`[ERROR]-------- activation_function cannot be empty, null or undefined.`);
+            if (!padding || padding == undefined || padding == null || padding === "") throw new Error(`[ERROR]-------- Padding cannot be empty, null or undefined.`);
+            if (inputShape.some(num => !(num > 0))) throw new Error('[ERROR]------- Input shape values should not be null, undefined, 0 or a negative number')
+
+            // check if the padding is same/valid, otherwise throw error
+            let paddings = ["same", "valid"];
+            if (!paddings.includes(padding.toLowerCase())) {
+                throw new Error(`[ERROR]------- ${padding.toLowerCase()} is invalid. Use 'same' or 'valid' only`);
+            }
+
+            // check if the activation function is valid
+            const function_name = activation_function.toLowerCase();
+
+            if (!activation[function_name] || !activation.derivatives[function_name]) {
+                throw new Error(`[ERROR]------- Activation function '${function_name}' or its derivative not found or invalid,`);
+            }
+
+            return {
+                layer_name: "transConvLayer",
+                activation_function: activation[function_name],
+                derivative_activation_function: activation.derivatives[function_name],
+                kernel_size: kernel_size,
+                filters: filters,
+                padding: padding.toLowerCase(),
+                strides: strides,
+                inputShape: inputShape,
+                isParametric: true,
+                useBias: useBias,
+                feedforward: (input, current_layer, pointer) => transConv.feedforward(input, current_layer, pointer),
             }
         }
         catch (error) {

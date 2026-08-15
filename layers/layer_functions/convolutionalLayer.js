@@ -1,6 +1,6 @@
 const activation = require('../../core/bindings')
 const { applyPadding, Convolve, Dilate_Input} = require("../../core/bindings");
-const { XavierInitialization, calculateTensorShape, getPaddingSizes } = require("../../utils/utils");
+const { calculateTensorShape, getPaddingSizes } = require("../../utils/utils");
 
 /**
  * The feedforward logic of this layer
