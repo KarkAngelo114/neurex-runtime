@@ -63,15 +63,17 @@ class Runtime {
             const layerBuilder = new Layers();
             this.layers = modelData.layers.map(layerData => {
                 let newLayer;
-                if (layerData.layer_name === "connected_layer") {
+                if (layerData.layer_name === "connected_layer" || layerData.layer_name === "Connected Layer") {
                     // Recreate the connected layer with the correct activation and size
                     newLayer = layerBuilder.connectedLayer(layerData.layer_size, layerData.activation_function_name);
                     newLayer.weightShape = layerData.weightShape;
+                    newLayer.inputShape = layerData.inputShape;
+                    newLayer.outputShape = layerData.outputShape;
                     this.parametric_layers.push(layerData.layer_name);
-                } else if (layerData.layer_name === "input_layer") {
+                } else if (layerData.layer_name === "input_layer" || layerData.layer_name === "Input Layer") {
                     // Recreate the input layer. Note: The input layer doesn't have methods, so this is just for consistency
                     newLayer = layerBuilder.inputShape({ features: layerData.layer_size });
-                } else if (layerData.layer_name === "convolutionalLayer") {
+                } else if (layerData.layer_name === "convolutionalLayer" || layerData.layer_name === "Convolutional Layer") {
                     // recreate Convolutional layer
                     newLayer = layerBuilder.convolutionalLayer(layerData.filters, layerData.strides, layerData.kernel_size, layerData.activation_function_name, layerData.padding);
                     newLayer.weightShape = layerData.weightShape;
@@ -80,14 +82,14 @@ class Runtime {
                     const [H, W, D] = layerData.outputShape;
                     const totalSize = H * W * D;
                     this.parametric_layers.push(layerData.layer_name);
-                } else if (layerData.layer_name === "maxPooling") {
+                } else if (layerData.layer_name === "maxPooling" || layerData.layer_name === "Max Pooling") {
                     newLayer = layerBuilder.maxPooling(layerData.poolSize, layerData.strides, layerData.padding);
                     newLayer.inputShape = layerData.inputShape;
                     newLayer.outputShape = layerData.outputShape;
                     const [H, W, D] = layerData.outputShape;
                     const totalSize = H * W * D;
                 }
-                else if (layerData.layer_name === "EmbeddingLayer") {
+                else if (layerData.layer_name === "EmbeddingLayer" || layerData.layer_name === "Embedding Layer") {
                     const vocabSize = layerData.vocabSize;
                     const embeddingDim = layerData.embeddingDim;
                     const sequence_length = layerData.maxSequenceLength;
@@ -99,7 +101,7 @@ class Runtime {
                     newLayer.outputSize = outputSize;
                     this.parametric_layers.push(layerData.layer_name);
                 }
-                else if (layerData.layer_name === "recurrent_cell") {
+                else if (layerData.layer_name === "recurrent_cell" || layerData.layer_name === "Recurrent Cell") {
                     const units = layerData.units;
                     const return_sequence = layerData.return_sequence || false;
                     const return_state = layerData.return_state || false;
@@ -110,7 +112,7 @@ class Runtime {
                     newLayer.maxSequenceLength = layerData.maxSequenceLength || 1;
                     this.parametric_layers.push(layerData.layer_name);
                 }
-                else if (layerData.layer_name === "transConvLayer") {
+                else if (layerData.layer_name === "transConvLayer" || layerData.layer_name === "Trans Convolution") {
                     const filters = layerData.filters;
                     const strides = layerData.strides;
                     const kernelSize = layerData.kernel_size
